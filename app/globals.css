@@ -1,3 +1,10 @@
+/* Tailwind — used by the roadmap page (pulled from the main site as-is).
+   dashboard.css is imported after this file (in page.tsx), so its scoped
+   .dash rules win over Tailwind's preflight for the dashboard. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Minimal global shell for the standalone Aries app.
    The dashboard's own styling lives in dashboard.css (scoped under .dash).
    Here we only map the brand font variables and reset the page so the

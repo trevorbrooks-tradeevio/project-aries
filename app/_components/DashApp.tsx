@@ -9,6 +9,7 @@
    Global search across tasks/notes/goals is deferred to roadmap Phase 5 — the
    original implementation lives in git history if you need it back. */
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Icons, type IconName } from "./Icons";
 import { ListView } from "./ListView";
@@ -32,6 +33,16 @@ const NAV: { id: View; label: string; icon: IconName }[] = [
   { id: "calendar", label: "Calendar", icon: "Calendar" },
   { id: "goals", label: "Goals", icon: "Goal" },
 ];
+
+function RoadmapIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="6" cy="19" r="2" />
+      <circle cx="18" cy="5" r="2" />
+      <path d="M8 19h6a4 4 0 0 0 0-8H10a4 4 0 0 1 0-8h6" />
+    </svg>
+  );
+}
 
 function BrandMini({ big, onDark }: { big?: boolean; onDark?: boolean }) {
   return (
@@ -102,6 +113,9 @@ export function DashApp() {
                 </button>
               );
             })}
+            <Link href="/roadmap" className="nav-item">
+              <RoadmapIcon size={20} />Roadmap
+            </Link>
           </nav>
           <div className="sidebar-foot">
             <div className="avatar">{SEED_DATA.user.initials}</div>
@@ -141,6 +155,9 @@ export function DashApp() {
                 </button>
               );
             })}
+            <Link href="/roadmap" className="bnav-item">
+              <RoadmapIcon size={22} />Roadmap
+            </Link>
           </nav>
         </div>
       </div>
