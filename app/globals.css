@@ -1,0 +1,27 @@
+/* Minimal global shell for the standalone Aries app.
+   The dashboard's own styling lives in dashboard.css (scoped under .dash).
+   Here we only map the brand font variables and reset the page so the
+   dashboard can fill the viewport. */
+
+:root {
+  --font-heading: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  --font-body: var(--font-barlow), "Arial", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #0a0a0a;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Avoid iOS overscroll bounce so the installed app feels native. */
+  overscroll-behavior-y: none;
+}
