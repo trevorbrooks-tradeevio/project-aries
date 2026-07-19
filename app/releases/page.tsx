@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { AuthGate } from "../_components/AuthGate";
+import { MobileNav } from "../_components/MobileNav";
 
 /* ───────────────────────────────────────────────────────────
    ARIES — Releases / Deploy log
@@ -134,7 +135,9 @@ function ReleasesPage() {
           Note: this is a hand-maintained changelog, updated with each deploy —
           not a live feed from Vercel.
         </p>
+        <div className="h-20 lg:hidden" />
       </div>
+      <MobileNav />
     </main>
   );
 }

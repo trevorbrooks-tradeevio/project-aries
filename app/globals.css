@@ -32,3 +32,36 @@ body {
   /* Avoid iOS overscroll bounce so the installed app feels native. */
   overscroll-behavior-y: none;
 }
+
+/* Shared mobile bottom nav for the standalone sub-pages (roadmap, releases).
+   Mirrors the dashboard's bottom-nav but is fixed-position and self-contained
+   so it renders on the light-themed pages too. Hidden on desktop. */
+.mobilenav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  background: #111111; border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+@media (min-width: 1024px) { .mobilenav { display: none; } }
+.mobilenav a, .mobilenav .mn-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 11px 0 13px; background: transparent; border: none; cursor: pointer;
+  color: rgba(255, 255, 255, 0.6); text-decoration: none;
+  font-family: var(--font-heading); font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+.mobilenav a svg, .mobilenav .mn-btn svg { width: 22px; height: 22px; }
+.mobilenav a:active, .mobilenav .mn-btn:active { color: #fff; }
+.mobilenav-more { position: relative; }
+.mobilenav-backdrop { position: fixed; inset: 0; z-index: 50; background: transparent; }
+.mobilenav-menu {
+  position: fixed; right: 8px; bottom: 64px; z-index: 51; min-width: 190px;
+  background: #111111; border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.mobilenav-menu a {
+  flex-direction: row; justify-content: flex-start; gap: 12px;
+  padding: 14px 16px; font-size: 14px; color: rgba(255, 255, 255, 0.8);
+}
+.mobilenav-menu a + a { border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.mobilenav-menu a svg { width: 18px; height: 18px; }

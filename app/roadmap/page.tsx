@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { AuthGate } from "../_components/AuthGate";
+import { MobileNav } from "../_components/MobileNav";
 
 /* ───────────────────────────────────────────────────────────
    ARIES — Personal Dashboard Roadmap (Gantt)
@@ -235,8 +236,10 @@ function RoadmapPage() {
           <p className="mt-6 font-[family-name:var(--font-body)] text-[12px] font-light text-charcoal/40">
             Note: this page is protected by Google sign-in (Firebase Auth).
           </p>
+          <div className="h-20 lg:hidden" />
         </div>
       )}
+      <MobileNav />
     </main>
   );
 }

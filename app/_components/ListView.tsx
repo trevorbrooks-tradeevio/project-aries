@@ -122,6 +122,24 @@ export function ListView({ tasks, setTasks, quote = { text: "", author: "" }, re
   };
   const reset = () => { dragId.current = null; setDragging(null); setDropId(null); };
 
+  // Up/down reorder (mobile-friendly alternative to drag). Swaps a task with
+  // its neighbor in the displayed order, applied to the underlying array.
+  const moveTask = (id: string, dir: -1 | 1) => {
+    if (!reorderEnabled) return;
+    const di = display.findIndex((t) => t.id === id);
+    const nj = di + dir;
+    if (di < 0 || nj < 0 || nj >= display.length) return;
+    const neighborId = display[nj]!.id;
+    setTasks((prev) => {
+      const arr = [...prev];
+      const a = arr.findIndex((t) => t.id === id);
+      const b = arr.findIndex((t) => t.id === neighborId);
+      if (a < 0 || b < 0) return prev;
+      [arr[a], arr[b]] = [arr[b]!, arr[a]!];
+      return arr;
+    });
+  };
+
   const openDetail = (t: Task) => { setSelId(t.id); setDraft({ ...t }); setIsNew(false); };
 
   useEffect(() => {
@@ -332,6 +350,16 @@ export function ListView({ tasks, setTasks, quote = { text: "", author: "" }, re
               <span className="t-date">{t.status === "done" && t.dateCompleted ? "✓ " + fmtDate(t.dateCompleted) : fmtDate(t.date)}</span>
             </div>
             <div className="t-actions" onClick={(e) => e.stopPropagation()}>
+              {reorderEnabled && (
+                <>
+                  <button className="t-move" onClick={() => moveTask(t.id, -1)} disabled={display[0]?.id === t.id} aria-label="Move up" title="Move up" type="button">
+                    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15" /></svg>
+                  </button>
+                  <button className="t-move" onClick={() => moveTask(t.id, 1)} disabled={display[display.length - 1]?.id === t.id} aria-label="Move down" title="Move down" type="button">
+                    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
+                  </button>
+                </>
+              )}
               <button onClick={() => startEdit(t)} aria-label="Edit title" title="Edit title" type="button"><Icons.Edit size={14} /></button>
               <button onClick={() => toggleArchive(t.id)} aria-label={t.archived ? "Unarchive" : "Archive"} title={t.archived ? "Unarchive" : "Archive"} type="button"><Icons.Archive size={14} /></button>
               <button onClick={() => deleteTask(t.id)} aria-label="Delete task" title="Delete" type="button"><Icons.Trash size={14} /></button>

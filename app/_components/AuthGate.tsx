@@ -25,8 +25,8 @@ function Gate({ children }: { children: React.ReactNode }) {
         }}
       >
         <div style={{ textAlign: "center", maxWidth: 320 }}>
-          <h1 style={{ fontSize: 22, marginBottom: 8 }}>Project Aries</h1>
-          <p style={{ opacity: 0.7, marginBottom: 24 }}>
+          <h1 style={{ fontSize: 22, marginBottom: 8, color: "#fff" }}>Project Aries</h1>
+          <p style={{ marginBottom: 24, color: "rgba(255,255,255,0.7)" }}>
             Sign in to load your dashboard.
           </p>
           <button

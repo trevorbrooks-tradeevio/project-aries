@@ -34,7 +34,7 @@ export function GoalsView() {
             >
               {cat.title}
             </h2>
-            <p
+            <ul
               style={{
                 fontFamily: "var(--font-body)",
                 fontSize: 14,
@@ -42,10 +42,14 @@ export function GoalsView() {
                 color: "var(--text-2)",
                 lineHeight: 1.7,
                 margin: 0,
+                paddingLeft: 20,
+                listStyle: "disc",
               }}
             >
-              {cat.items.join(" · ")}
-            </p>
+              {cat.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
           </div>
         ))}
       </div>

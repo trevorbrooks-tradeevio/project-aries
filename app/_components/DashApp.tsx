@@ -56,7 +56,23 @@ function BrandMini({ big, onDark }: { big?: boolean; onDark?: boolean }) {
 export function DashApp() {
   const [theme, setTheme] = useLocalState<"dark" | "light">("theme", "light");
   const { signOut } = useAuth();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [sidebarHidden, setSidebarHidden] = useLocalState<boolean>("sidebarHidden", false);
   const [view, setView] = useState<View>("list");
+
+  // Open the view named in the URL hash (e.g. "/#calendar"), used by the
+  // sub-page mobile nav to jump back to a specific dashboard view.
+  useEffect(() => {
+    const applyHash = () => {
+      const h = window.location.hash.replace("#", "");
+      if (h === "list" || h === "notes" || h === "calendar" || h === "goals") {
+        setView(h);
+      }
+    };
+    applyHash();
+    window.addEventListener("hashchange", applyHash);
+    return () => window.removeEventListener("hashchange", applyHash);
+  }, []);
   const [tasks, setTasks] = useLocalState<Task[]>("tasks", SEED_DATA.tasks);
   const [notes, setNotes] = useLocalState<Note[]>("notes", SEED_DATA.notes);
 
@@ -99,7 +115,7 @@ export function DashApp() {
   useEffect(() => { setHeaderHidden(false); lastY.current = 0; }, [view]);
 
   return (
-    <div className="dash" data-theme={theme}>
+    <div className={"dash" + (sidebarHidden ? " sidebar-hidden" : "")} data-theme={theme}>
       <div className="app" id="appFrame">
         {/* Sidebar (desktop) */}
         <aside className="sidebar">
@@ -140,6 +156,18 @@ export function DashApp() {
         {/* Main */}
         <div className="main">
           <div className="topbar" ref={topbarRef} style={{ marginTop: headerHidden ? -topbarH : 0 }}>
+            <button
+              className="sidebar-toggle"
+              onClick={() => setSidebarHidden((h) => !h)}
+              aria-label={sidebarHidden ? "Show menu" : "Hide menu"}
+              title={sidebarHidden ? "Show menu" : "Hide menu"}
+              type="button"
+            >
+              <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="16" rx="2" />
+                <line x1="9" y1="4" x2="9" y2="20" />
+              </svg>
+            </button>
             <div className="brand-mini"><BrandMini /></div>
             <span className="date">{todayLabel}</span>
             <div className="topbar-actions">
@@ -160,7 +188,7 @@ export function DashApp() {
           <div className="content" ref={contentRef}>
             {view === "list" && <ListView tasks={tasks} setTasks={setTasks} quote={SEED_DATA.quote} reminders={SEED_DATA.reminders} />}
             {view === "notes" && <NotesView notes={notes} setNotes={setNotes} />}
-            {view === "calendar" && <CalendarView events={SEED_DATA.events} />}
+            {view === "calendar" && <CalendarView events={SEED_DATA.events} tasks={tasks} />}
             {view === "goals" && <GoalsView />}
           </div>
 
@@ -174,9 +202,40 @@ export function DashApp() {
                 </button>
               );
             })}
-            <Link href="/roadmap" className="bnav-item">
-              <RoadmapIcon size={22} />Roadmap
-            </Link>
+            <div className="bnav-more">
+              <button
+                type="button"
+                className={"bnav-item" + (moreOpen ? " active" : "")}
+                aria-expanded={moreOpen}
+                aria-label="More"
+                onClick={() => setMoreOpen((o) => !o)}
+              >
+                <svg width={22} height={22} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <circle cx="5" cy="12" r="2" />
+                  <circle cx="12" cy="12" r="2" />
+                  <circle cx="19" cy="12" r="2" />
+                </svg>
+                More
+              </button>
+              {moreOpen && (
+                <>
+                  <div className="bnav-more-backdrop" onClick={() => setMoreOpen(false)} />
+                  <div className="bnav-more-menu" role="menu">
+                    <Link href="/roadmap" className="bnav-more-item" role="menuitem" onClick={() => setMoreOpen(false)}>
+                      <RoadmapIcon size={18} />Roadmap
+                    </Link>
+                    <Link href="/releases" className="bnav-more-item" role="menuitem" onClick={() => setMoreOpen(false)}>
+                      <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M12 2 2 7l10 5 10-5-10-5Z" />
+                        <path d="m2 17 10 5 10-5" />
+                        <path d="m2 12 10 5 10-5" />
+                      </svg>
+                      Releases
+                    </Link>
+                  </div>
+                </>
+              )}
+            </div>
           </nav>
         </div>
       </div>

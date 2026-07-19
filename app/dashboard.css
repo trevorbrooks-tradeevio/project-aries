@@ -108,6 +108,20 @@
     padding: 22px 0;
   }
 }
+/* Hide the desktop sidebar when collapsed (higher specificity than the
+   media rule above, so it wins on desktop too). */
+.dash.sidebar-hidden .sidebar { display: none; }
+/* Sidebar show/hide toggle — lives in the top bar's left cell, desktop only
+   (phone uses the bottom nav, so there's no sidebar to toggle there). */
+.dash .topbar .sidebar-toggle {
+  display: none; grid-column: 1; justify-self: start;
+  background: transparent; border: none; color: var(--text-2); cursor: pointer;
+  padding: 6px; align-items: center;
+}
+.dash .topbar .sidebar-toggle:hover { color: var(--text); }
+@media (min-width: 1024px) {
+  .dash .topbar .sidebar-toggle { display: inline-flex; }
+}
 .dash .sidebar-brand { padding: 4px 22px 22px; }
 .dash .sidebar-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 12px; flex: 1; }
 .dash .nav-item {
@@ -146,10 +160,26 @@
 
 /* bottom nav (phone) */
 .dash .bottom-nav {
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: repeat(5, 1fr);
   border-top: 1px solid var(--border); background: var(--sidebar);
   flex-shrink: 0; position: sticky; bottom: 0; z-index: 20;
 }
+.dash .bnav-more { position: relative; display: flex; }
+.dash .bnav-more > .bnav-item { width: 100%; }
+.dash .bnav-more-backdrop { position: fixed; inset: 0; z-index: 25; background: transparent; }
+.dash .bnav-more-menu {
+  position: absolute; bottom: calc(100% + 8px); right: 8px; z-index: 30;
+  min-width: 190px; background: var(--sidebar); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+.dash .bnav-more-item {
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+  color: var(--sidebar-item); background: transparent;
+  font-family: var(--font-heading, "Barlow Condensed", sans-serif);
+  font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+}
+.dash .bnav-more-item + .bnav-more-item { border-top: 1px solid var(--border); }
+.dash .bnav-more-item:hover, .dash .bnav-more-item:active { color: #fff; background: var(--panel-hover); }
 @media (min-width: 1024px) {
   .dash .bottom-nav { display: none; }
 }
@@ -448,12 +478,12 @@
 .dash .t-handle.disabled { opacity: 0.3; cursor: not-allowed; }
 @media (min-width: 1024px) {
   .dash .t-handle { display: flex; }
+  /* Desktop uses the drag handle; hide the up/down buttons there. */
+  .dash .t-actions .t-move { display: none; }
 }
+.dash .t-actions .t-move:disabled { opacity: 0.3; cursor: not-allowed; }
 .dash .task-row .t-main { grid-area: title; min-width: 0; }
-.dash .t-title { font-family: var(--font-body); font-size: 15px; font-weight: 400; color: var(--text); }
-@media (min-width: 1024px) {
-  .dash .t-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-}
+.dash .t-title { font-family: var(--font-body); font-size: 15px; font-weight: 400; color: var(--text); white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
 .dash .t-sub { font-family: var(--font-body); font-size: 12px; font-weight: 300; color: var(--text-3); margin-top: 2px; }
 .dash .t-meta { grid-area: meta; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; min-width: 0; }
 @media (min-width: 1024px) {
@@ -609,6 +639,7 @@
 .dash .legend .sw { width: 10px; height: 10px; border-radius: 2px; }
 .dash .sw.google { background: var(--accent); }
 .dash .sw.outlook { background: #2f6fd0; }
+.dash .sw.task { background: #2ecc71; }
 .dash .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); }
 .dash .cal-dow { background: var(--panel-2); padding: 8px 6px; text-align: center; font-family: var(--font-heading, "Barlow Condensed", sans-serif); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-3); }
 .dash .cal-cell { background: var(--panel); min-height: 62px; padding: 6px; display: flex; flex-direction: column; gap: 3px; }
@@ -624,6 +655,48 @@
 }
 .dash .cal-ev.google { background: rgba(192,57,43,0.85); }
 .dash .cal-ev.outlook { background: rgba(47,111,208,0.85); }
+.dash .cal-ev.task { background: rgba(46,204,113,0.85); }
+.dash .cal-ev-time { font-weight: 700; margin-right: 4px; }
+
+/* Week view — Google-style time grid: hour labels down the left, 7 day
+   columns, events dropped into their hour row. */
+.dash .cal-week { border: 1px solid var(--border); overflow-x: auto; }
+.dash .cal-week .cw-head, .dash .cal-week .cw-row {
+  display: grid; grid-template-columns: 56px repeat(7, minmax(90px, 1fr));
+}
+.dash .cal-week .cw-head {
+  position: sticky; top: 0; z-index: 2; background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+.dash .cw-timecol-head { border-right: 1px solid var(--border); }
+.dash .cw-dayhead {
+  padding: 8px 4px; text-align: center; border-left: 1px solid var(--border);
+  font-family: var(--font-heading, "Barlow Condensed", sans-serif);
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-2);
+}
+.dash .cw-dayhead span { display: block; font-size: 16px; font-weight: 800; color: var(--text); }
+.dash .cw-dayhead.out { opacity: 0.4; }
+.dash .cw-dayhead.today span { color: var(--accent); }
+.dash .cal-week .cw-allday {
+  display: grid; grid-template-columns: 56px repeat(7, minmax(90px, 1fr));
+  border-bottom: 1px solid var(--border); background: var(--panel);
+}
+.dash .cw-allday-label {
+  padding: 4px 6px; text-align: right; border-right: 1px solid var(--border);
+  font-family: var(--font-body); font-size: 9px; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text-3);
+}
+.dash .cw-allday-cell {
+  border-left: 1px solid var(--border); padding: 3px;
+  display: flex; flex-direction: column; gap: 3px; min-height: 22px;
+}
+.dash .cw-row { border-top: 1px solid var(--border); min-height: 46px; }
+.dash .cw-time {
+  padding: 3px 6px 0; text-align: right; border-right: 1px solid var(--border);
+  font-family: var(--font-body); font-size: 10px; color: var(--text-3); white-space: nowrap;
+}
+.dash .cw-cell { border-left: 1px solid var(--border); padding: 3px; display: flex; flex-direction: column; gap: 3px; }
 .dash .cal-more { font-size: 10px; color: var(--text-3); font-family: var(--font-body); padding-left: 2px; }
 .dash .cal-empty { border: 1px dashed var(--border-strong); padding: 40px 24px; text-align: center; margin-bottom: 16px; background: var(--panel); }
 .dash .cal-empty .ce-title { font-family: var(--font-heading, "Barlow Condensed", sans-serif); font-size: 20px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }

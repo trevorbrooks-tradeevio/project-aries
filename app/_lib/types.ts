@@ -27,7 +27,7 @@ export type Goal = {
   note: string;
 };
 
-export type CalendarEventSource = "google" | "outlook";
+export type CalendarEventSource = "google" | "outlook" | "task";
 
 export type CalendarEvent = {
   title: string;

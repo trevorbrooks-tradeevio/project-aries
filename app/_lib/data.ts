@@ -1,4 +1,44 @@
-import type { DashData } from "./types";
+import type { DashData, CalendarEvent, CalendarEvents } from "./types";
+
+/**
+ * Recurring work / New Elevation meetings, generated from the current week
+ * through the end of 2026. These are Teams meetings, tagged `outlook` (blue).
+ * Recurrence rules:
+ *   - Any Store Daily Standup + Pre Sales Daily: weekdays (Mon–Fri)
+ *   - Trevor/Joseph Weekly: Thursdays
+ *   - Pre-Sales Intake Call: Tuesdays & Thursdays
+ *   - Builder Steer Co / Progress Update (FSA): Tuesdays, 3:00–3:30
+ *   - Algolia + New Elevation: one-time (Wed Jul 22, 2026)
+ */
+function buildWorkEvents(): CalendarEvents {
+  const map: CalendarEvents = {};
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const add = (key: string, ev: CalendarEvent) => { (map[key] ||= []).push(ev); };
+
+  const start = new Date(2026, 6, 19); // Sun Jul 19, 2026
+  const end = new Date(2026, 11, 31);  // Thu Dec 31, 2026
+  for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const dow = d.getDay(); // 0 Sun … 6 Sat
+    const key = iso(d);
+    if (dow >= 1 && dow <= 5) {
+      add(key, { title: "Any Store - Daily Standup", time: "11:00", src: "outlook" });
+      add(key, { title: "Pre Sales - Daily", time: "11:15", src: "outlook" });
+    }
+    if (dow === 4) add(key, { title: "Trevor/Joseph Weekly", time: "10:00", src: "outlook" });
+    if (dow === 2 || dow === 4) add(key, { title: "Pre-Sales - Intake Call", time: "15:00", src: "outlook" });
+    if (dow === 2) add(key, { title: "Builder Steer Co / Progress Update (FSA)", time: "15:00", src: "outlook" });
+    if (dow === 2) add(key, { title: "Jenna / Trevor TB (FSA)", time: "14:30", src: "outlook" });
+    if (dow === 2) add(key, { title: "Builder Migration Weekly TB (FSA)", time: "12:00", src: "outlook" });
+  }
+
+  // One-off (not recurring)
+  add("2026-07-22", { title: "Algolia + New Elevation", time: "14:30", src: "outlook" });
+
+  // Sort each day's events by time.
+  for (const key of Object.keys(map)) map[key]!.sort((a, b) => a.time.localeCompare(b.time));
+  return map;
+}
 
 /**
  * Seed data — used only the first time the dashboard loads on a given
@@ -56,19 +96,7 @@ export const SEED_DATA: DashData = {
     { id: "g6", text: "Invest, save, repeat — every month", note: "" },
   ],
 
-  // Calendar events keyed by ISO date. Seed content is illustrative sample
-  // data (originally authored around July 2025) — not tied to any real
-  // connected calendar.
-  events: {
-    "2025-07-02": [{ title: "Standup", src: "google", time: "9:00" }],
-    "2025-07-03": [{ title: "KGG payments call", src: "outlook", time: "11:00" }],
-    "2025-07-08": [{ title: "Blog review", src: "google", time: "14:00" }, { title: "1:1 Sarah", src: "outlook", time: "16:00" }],
-    "2025-07-09": [{ title: "QA sync", src: "google", time: "10:00" }],
-    "2025-07-10": [{ title: "Backlog triage", src: "outlook", time: "13:00" }],
-    "2025-07-14": [{ title: "AI workshop", src: "google", time: "10:00" }, { title: "Client demo", src: "google", time: "15:00" }, { title: "Retro", src: "outlook", time: "17:00" }],
-    "2025-07-16": [{ title: "Vendor call", src: "outlook", time: "12:00" }],
-    "2025-07-22": [{ title: "Sprint planning", src: "google", time: "9:30" }],
-    "2025-07-25": [{ title: "Invoice run", src: "outlook", time: "11:00" }],
-    "2025-07-29": [{ title: "Roadmap review", src: "google", time: "14:00" }],
-  },
+  // Calendar events keyed by ISO date — real recurring work / New Elevation
+  // Teams meetings, generated through the end of 2026 (see buildWorkEvents).
+  events: buildWorkEvents(),
 };
