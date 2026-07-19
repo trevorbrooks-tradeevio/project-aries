@@ -118,6 +118,14 @@ export function DashApp() {
             <Link href="/roadmap" className="nav-item">
               <RoadmapIcon size={20} />Roadmap
             </Link>
+            <Link href="/releases" className="nav-item">
+              <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 2 2 7l10 5 10-5-10-5Z" />
+                <path d="m2 17 10 5 10-5" />
+                <path d="m2 12 10 5 10-5" />
+              </svg>
+              Releases
+            </Link>
           </nav>
           <div className="sidebar-foot">
             <div className="avatar">{SEED_DATA.user.initials}</div>

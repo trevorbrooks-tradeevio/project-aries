@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useState } from "react";
 import {
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut as fbSignOut,
   onAuthStateChanged,
   type User as FbUser,
@@ -24,6 +26,20 @@ const Ctx = createContext<AuthCtx>({
   signOut: async () => {},
 });
 
+const provider = new GoogleAuthProvider();
+
+// Popup errors that mean "the popup route won't work here" — fall back to a
+// full-page redirect, which is reliable on desktop, in installed PWAs, and on
+// iOS where popups are flaky. This is what fixes the "popup flickers then
+// disappears" symptom.
+const POPUP_FALLBACK_CODES = new Set([
+  "auth/popup-blocked",
+  "auth/popup-closed-by-user",
+  "auth/cancelled-popup-request",
+  "auth/operation-not-supported-in-this-environment",
+  "auth/web-storage-unsupported",
+]);
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<FbUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,9 +53,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  // Complete any redirect-based sign-in when the page comes back from Google.
+  useEffect(() => {
+    getRedirectResult(auth).catch(() => {
+      // Surfaced via onAuthStateChanged / next sign-in attempt; swallow here.
+    });
+  }, []);
+
   const signIn = async () => {
-    await signInWithPopup(auth, new GoogleAuthProvider());
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (err: unknown) {
+      const code =
+        typeof err === "object" && err !== null && "code" in err
+          ? String((err as { code: unknown }).code)
+          : "";
+      if (POPUP_FALLBACK_CODES.has(code)) {
+        await signInWithRedirect(auth, provider);
+      } else {
+        throw err;
+      }
+    }
   };
+
   const signOut = async () => {
     await fbSignOut(auth);
   };
