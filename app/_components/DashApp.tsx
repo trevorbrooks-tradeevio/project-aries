@@ -17,7 +17,8 @@ import { NotesView } from "./NotesView";
 import { CalendarView } from "./CalendarView";
 import { GoalsView } from "./GoalsView";
 import { SEED_DATA } from "../_lib/data";
-import { useLocalState } from "../_lib/storage";
+import { useCloudState as useLocalState } from "../_lib/cloudState";
+import { useAuth } from "../_lib/auth";
 import type { Task, Note, View } from "../_lib/types";
 
 function formatTodayLabel(d: Date) {
@@ -54,6 +55,7 @@ function BrandMini({ big, onDark }: { big?: boolean; onDark?: boolean }) {
 
 export function DashApp() {
   const [theme, setTheme] = useLocalState<"dark" | "light">("theme", "light");
+  const { signOut } = useAuth();
   const [view, setView] = useState<View>("list");
   const [tasks, setTasks] = useLocalState<Task[]>("tasks", SEED_DATA.tasks);
   const [notes, setNotes] = useLocalState<Note[]>("notes", SEED_DATA.notes);
@@ -132,9 +134,18 @@ export function DashApp() {
           <div className="topbar" ref={topbarRef} style={{ marginTop: headerHidden ? -topbarH : 0 }}>
             <div className="brand-mini"><BrandMini /></div>
             <span className="date">{todayLabel}</span>
-            <div className="theme-toggle">
-              <button className={theme === "light" ? "on" : ""} onClick={() => setTheme("light")} aria-label="Light theme" type="button"><Icons.Sun size={15} /></button>
-              <button className={theme === "dark" ? "on" : ""} onClick={() => setTheme("dark")} aria-label="Dark theme" type="button"><Icons.Moon size={15} /></button>
+            <div className="topbar-actions">
+              <div className="theme-toggle">
+                <button className={theme === "light" ? "on" : ""} onClick={() => setTheme("light")} aria-label="Light theme" type="button"><Icons.Sun size={15} /></button>
+                <button className={theme === "dark" ? "on" : ""} onClick={() => setTheme("dark")} aria-label="Dark theme" type="button"><Icons.Moon size={15} /></button>
+              </div>
+              <button className="icon-btn signout" aria-label="Sign out" title="Sign out" type="button" onClick={() => void signOut()}>
+                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+              </button>
             </div>
           </div>
 

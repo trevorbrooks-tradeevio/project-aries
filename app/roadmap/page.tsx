@@ -1,20 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { PasswordGate } from "../_components/PasswordGate";
+import { useMemo } from "react";
+import { AuthGate } from "../_components/AuthGate";
 
 /* ───────────────────────────────────────────────────────────
    ARIES — Personal Dashboard Roadmap (Gantt)
-   Light-themed, password-gated page within the Tradeevio site.
+   Light-themed page, gated by Google sign-in (Firebase Auth).
    Route: /roadmap
-
-   NOTE: The password check below runs in the browser and is a
-   light privacy gate, not real security. For true protection,
-   move auth server-side (see the build plan, Phase 2).
 ─────────────────────────────────────────────────────────── */
-
-const PASSWORD = "trevorbrooks0322"; // first + last name + 0322, case-insensitive
 
 const TOTAL_WEEKS = 14;
 
@@ -54,6 +48,7 @@ const PHASES: Phase[] = [
     tasks: [
       { label: "Supabase setup + schema", start: 4, span: 1, color: "#3E1E1E" },
       { label: "Login + 2FA (single-user lock)", start: 4, span: 2, color: "#3E1E1E" },
+      { label: "Google log-in (OAuth sign-in)", start: 5, span: 1, color: "#3E1E1E" },
       { label: "Cloud sync across devices", start: 5, span: 2, color: "#3E1E1E" },
     ],
   },
@@ -208,81 +203,8 @@ function Gantt() {
   );
 }
 
-/* ─── Password gate ─────────────────────────────────────── */
-function Gate({ onUnlock }: { onUnlock: () => void }) {
-  const [value, setValue] = useState("");
-  const [error, setError] = useState(false);
-
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (value.trim().toLowerCase() === PASSWORD) {
-      onUnlock();
-    } else {
-      setError(true);
-    }
-  }
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-charcoal px-6">
-      <form onSubmit={submit} className="w-full max-w-sm">
-        <div className="mb-8 flex justify-center">
-          <span className="flex h-12 w-12 items-center justify-center border border-white/15 text-signal-red">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <rect x="3" y="11" width="18" height="11" rx="1" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-          </span>
-        </div>
-        <label className="mb-2 block text-center font-[family-name:var(--font-heading)] text-[11px] font-bold uppercase tracking-[0.25em] text-white/50">
-          Enter password
-        </label>
-        <input
-          type="password"
-          value={value}
-          onChange={(e) => {
-            setValue(e.target.value);
-            setError(false);
-          }}
-          autoFocus
-          aria-label="Password"
-          className="mb-3 w-full border border-white/15 bg-off-black px-3 py-3 text-center font-[family-name:var(--font-body)] text-[15px] tracking-[0.2em] text-white outline-none transition-colors focus:border-signal-red"
-        />
-        {error && (
-          <p className="mb-3 text-center font-[family-name:var(--font-body)] text-[12px] text-signal-red">
-            Incorrect password.
-          </p>
-        )}
-        <button
-          type="submit"
-          className="w-full bg-signal-red px-4 py-3 font-[family-name:var(--font-heading)] text-[13px] font-bold uppercase tracking-[0.12em] text-white transition-colors hover:bg-signal-red-dark"
-        >
-          Continue
-        </button>
-      </form>
-    </div>
-  );
-}
-
 /* ─── Page ──────────────────────────────────────────────── */
 function RoadmapPage() {
-  // TEMP: gate disabled so the roadmap shows without a password.
-  // Set this back to useState(false) to re-enable the password screen.
-  const [unlocked, setUnlocked] = useState(true);
-
-  if (!unlocked) {
-    return <Gate onUnlock={() => setUnlocked(true)} />;
-  }
-
   return (
     <main className="min-h-screen bg-cream text-charcoal">
       {(
@@ -311,8 +233,7 @@ function RoadmapPage() {
           </div>
 
           <p className="mt-6 font-[family-name:var(--font-body)] text-[12px] font-light text-charcoal/40">
-            Note: this page is protected by a browser-side password, which is a
-            light privacy gate rather than real security.
+            Note: this page is protected by Google sign-in (Firebase Auth).
           </p>
         </div>
       )}
@@ -320,12 +241,11 @@ function RoadmapPage() {
   );
 }
 
-/* Route wraps the roadmap in the same app-level password gate as the rest of
-   the site (unlock persists across pages via localStorage). */
+/* Route wraps the roadmap in the same Google sign-in gate as the dashboard. */
 export default function RoadmapRoute() {
   return (
-    <PasswordGate>
+    <AuthGate>
       <RoadmapPage />
-    </PasswordGate>
+    </AuthGate>
   );
 }

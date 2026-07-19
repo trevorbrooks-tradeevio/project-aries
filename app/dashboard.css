@@ -189,7 +189,9 @@
   font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em;
   color: var(--text-2); white-space: nowrap;
 }
-.dash .topbar .theme-toggle { grid-column: 3; justify-self: end; }
+.dash .topbar .topbar-actions { grid-column: 3; justify-self: end; display: flex; align-items: center; gap: 10px; }
+.dash .topbar .icon-btn.signout { color: var(--text-2); }
+.dash .topbar .icon-btn.signout:hover { color: var(--accent); }
 /* Brand sits in the left cell of the header — but only where the sidebar is
    hidden (< 1024px), since the sidebar carries the wordmark on desktop.
    Below 480px there isn't room for brand + date + toggle, so drop the brand
