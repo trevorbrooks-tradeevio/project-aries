@@ -35,6 +35,15 @@ const NAV: { id: View; label: string; icon: IconName }[] = [
   { id: "goals", label: "Goals", icon: "Goal" },
 ];
 
+function BacklogIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+      <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z" />
+    </svg>
+  );
+}
+
 function RoadmapIcon({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -45,9 +54,23 @@ function RoadmapIcon({ size = 20 }: { size?: number }) {
   );
 }
 
-function BrandMini({ big, onDark }: { big?: boolean; onDark?: boolean }) {
+function StyleGuideIcon({ size = 20 }: { size?: number }) {
   return (
-    <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: big ? 24 : 17, textTransform: "uppercase", letterSpacing: "0.03em", color: onDark ? "#fff" : "var(--text)" }}>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {/* Palette */}
+      <path d="M12 22a10 10 0 1 1 10-10c0 2.21-1.79 3.5-4 3.5h-1.5a2.5 2.5 0 0 0-2 4c.5.67.06 2.5-2.5 2.5Z" />
+      <circle cx="7.5" cy="11.5" r="1" />
+      <circle cx="11" cy="7.5" r="1" />
+      <circle cx="15.5" cy="9.5" r="1" />
+    </svg>
+  );
+}
+
+function BrandMini({ big, onSidebar }: { big?: boolean; onSidebar?: boolean }) {
+  // The sidebar surface flips between light (light theme) and dark (dark
+  // theme), so brand text on it uses --sidebar-fg rather than a fixed color.
+  return (
+    <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: big ? 24 : 17, textTransform: "uppercase", letterSpacing: "0.03em", color: onSidebar ? "var(--sidebar-fg, #fff)" : "var(--text)" }}>
       {SEED_DATA.user.name}
     </span>
   );
@@ -65,7 +88,7 @@ export function DashApp() {
   useEffect(() => {
     const applyHash = () => {
       const h = window.location.hash.replace("#", "");
-      if (h === "list" || h === "notes" || h === "calendar" || h === "goals") {
+      if (h === "list" || h === "backlog" || h === "notes" || h === "calendar" || h === "goals") {
         setView(h);
       }
     };
@@ -120,7 +143,7 @@ export function DashApp() {
         {/* Sidebar (desktop) */}
         <aside className="sidebar">
           <div className="sidebar-brand">
-            <BrandMini big onDark />
+            <BrandMini big onSidebar />
           </div>
           <nav className="sidebar-nav">
             {NAV.map((n) => {
@@ -131,6 +154,9 @@ export function DashApp() {
                 </button>
               );
             })}
+            <button type="button" className={"nav-item" + (view === "backlog" ? " active" : "")} onClick={() => setView("backlog")}>
+              <BacklogIcon size={20} />Backlog
+            </button>
             <Link href="/roadmap" className="nav-item">
               <RoadmapIcon size={20} />Roadmap
             </Link>
@@ -141,6 +167,10 @@ export function DashApp() {
                 <path d="m2 12 10 5 10-5" />
               </svg>
               Releases
+            </Link>
+            <Link href="/style-guide" className="nav-item">
+              <StyleGuideIcon size={20} />
+              Style Guide
             </Link>
           </nav>
           <div className="sidebar-foot">
@@ -187,6 +217,7 @@ export function DashApp() {
 
           <div className="content" ref={contentRef}>
             {view === "list" && <ListView tasks={tasks} setTasks={setTasks} quote={SEED_DATA.quote} reminders={SEED_DATA.reminders} />}
+            {view === "backlog" && <ListView tasks={tasks} setTasks={setTasks} mode="backlog" />}
             {view === "notes" && <NotesView notes={notes} setNotes={setNotes} />}
             {view === "calendar" && <CalendarView events={SEED_DATA.events} tasks={tasks} />}
             {view === "goals" && <GoalsView />}
@@ -221,6 +252,14 @@ export function DashApp() {
                 <>
                   <div className="bnav-more-backdrop" onClick={() => setMoreOpen(false)} />
                   <div className="bnav-more-menu" role="menu">
+                    <button
+                      type="button"
+                      className={"bnav-more-item" + (view === "backlog" ? " active" : "")}
+                      role="menuitem"
+                      onClick={() => { setView("backlog"); setMoreOpen(false); }}
+                    >
+                      <BacklogIcon size={18} />Backlog
+                    </button>
                     <Link href="/roadmap" className="bnav-more-item" role="menuitem" onClick={() => setMoreOpen(false)}>
                       <RoadmapIcon size={18} />Roadmap
                     </Link>
@@ -231,6 +270,9 @@ export function DashApp() {
                         <path d="m2 12 10 5 10-5" />
                       </svg>
                       Releases
+                    </Link>
+                    <Link href="/style-guide" className="bnav-more-item" role="menuitem" onClick={() => setMoreOpen(false)}>
+                      <StyleGuideIcon size={18} />Style Guide
                     </Link>
                   </div>
                 </>

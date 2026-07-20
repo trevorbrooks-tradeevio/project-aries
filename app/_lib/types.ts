@@ -11,6 +11,7 @@ export type Task = {
   description: string; // HTML string (RichText)
   notes: string;
   dateCompleted: string | null;
+  backlog?: boolean; // true = lives in the Backlog list, not the main dashboard
 };
 
 export type Note = {
@@ -25,6 +26,15 @@ export type Goal = {
   id: string;
   text: string;
   note: string;
+};
+
+/* Goals view: one card per category. `body` is HTML from the RichText
+   editor. The id exists so future tracker state (progress per group/goal)
+   can attach to a stable key without a data migration. */
+export type GoalGroup = {
+  id: string;
+  title: string;
+  body: string; // HTML string (RichText)
 };
 
 export type CalendarEventSource = "google" | "outlook" | "task";
@@ -53,6 +63,6 @@ export type DashData = {
   events: CalendarEvents;
 };
 
-export type View = "list" | "notes" | "calendar" | "goals";
+export type View = "list" | "backlog" | "notes" | "calendar" | "goals";
 
 export type FocusTarget = { type: "task" | "note" | "goal"; id: string } | null;

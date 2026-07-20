@@ -1,0 +1,57 @@
+/* ═══════════════════════════════════════════════════════════
+   ARIES DESIGN SYSTEM — token layer
+   Single source of truth for the "soft/trendy" refresh: warm beige
+   surfaces, generous radii, quiet shadows. Documented at /style-guide.
+   Consumers: AuthGate (sign-in), style-guide page; the dashboard
+   (.dash in dashboard.css) migrates onto these tokens over time.
+═══════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Color — surfaces ── */
+  --aries-bg: #f7f3ec;          /* page background (warm beige) */
+  --aries-bg-2: #f0eae0;        /* recessed / alternate surface */
+  --aries-surface: #ffffff;     /* cards, sheets */
+  --aries-surface-hover: #faf6f0;
+  --aries-sidebar: #fbf9f4;     /* light sidebar (Monarch-style) */
+
+  /* ── Color — ink ── */
+  --aries-ink: #1c1917;         /* primary text (warm near-black) */
+  --aries-ink-2: rgba(28, 25, 23, 0.62);   /* secondary text */
+  --aries-ink-3: rgba(28, 25, 23, 0.4);    /* placeholder / disabled */
+
+  /* ── Color — brand ── */
+  --aries-accent: #c0392b;      /* Aries red */
+  --aries-accent-dark: #96281b;
+  --aries-accent-soft: #f5ddd9; /* tint for chips / hover washes */
+  --aries-burgundy: #3e1e1e;    /* sidebar / deep brand */
+  --aries-success: #2f9e58;
+
+  /* ── Borders ── */
+  --aries-border: rgba(28, 25, 23, 0.1);
+  --aries-border-strong: rgba(28, 25, 23, 0.18);
+
+  /* ── Radius scale ── */
+  --aries-radius-sm: 8px;       /* chips, small controls */
+  --aries-radius-md: 12px;      /* buttons, inputs */
+  --aries-radius-lg: 16px;      /* panels, menus */
+  --aries-radius-xl: 24px;      /* hero cards (sign-in card) */
+  --aries-radius-pill: 999px;   /* toggles, pills, avatars */
+
+  /* ── Elevation ── */
+  --aries-shadow-1: 0 1px 2px rgba(28, 25, 23, 0.05);
+  --aries-shadow-2: 0 4px 16px rgba(28, 25, 23, 0.07);
+  --aries-shadow-3: 0 12px 40px rgba(28, 25, 23, 0.1);
+
+  /* ── Type ── */
+  --aries-font-heading: var(--font-heading);
+  --aries-font-body: var(--font-body);
+
+  /* ── Spacing (4px base) ── */
+  --aries-space-1: 4px;
+  --aries-space-2: 8px;
+  --aries-space-3: 12px;
+  --aries-space-4: 16px;
+  --aries-space-5: 24px;
+  --aries-space-6: 32px;
+  --aries-space-7: 48px;
+}

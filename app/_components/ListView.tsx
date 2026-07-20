@@ -65,9 +65,13 @@ type ListViewProps = {
   reminders?: string[];
   focusId?: string | null;
   onFocusConsumed?: () => void;
+  /** "dashboard" (default) shows non-backlog tasks; "backlog" shows only
+      backlog tasks. Each mode gets a button to send a task to the other list. */
+  mode?: "dashboard" | "backlog";
 };
 
-export function ListView({ tasks, setTasks, quote = { text: "", author: "" }, reminders = [], focusId, onFocusConsumed }: ListViewProps) {
+export function ListView({ tasks, setTasks, quote = { text: "", author: "" }, reminders = [], focusId, onFocusConsumed, mode = "dashboard" }: ListViewProps) {
+  const isBacklog = mode === "backlog";
   const [statusF, setStatusF] = useState<TaskStatus | "all">("all");
   const [fromD, setFromD] = useState("");
   const [toD, setToD] = useState("");
@@ -90,12 +94,17 @@ export function ListView({ tasks, setTasks, quote = { text: "", author: "" }, re
 
   const posOf = useMemo(() => {
     const m: Record<string, number> = {};
-    tasks.forEach((t, i) => (m[t.id] = i + 1));
+    let i = 0;
+    tasks.forEach((t) => {
+      if (isBacklog ? !t.backlog : !!t.backlog) return;
+      m[t.id] = ++i;
+    });
     return m;
-  }, [tasks]);
+  }, [tasks, isBacklog]);
   const reorderEnabled = sortBy === "manual" && statusF === "all" && !fromD && !toD && !showArchived;
 
   let display = tasks.filter((t) => {
+    if (isBacklog ? !t.backlog : !!t.backlog) return false;
     if (showArchived ? !t.archived : t.archived) return false;
     if (statusF !== "all" && t.status !== statusF) return false;
     if (fromD && t.date < fromD) return false;
@@ -148,7 +157,7 @@ export function ListView({ tasks, setTasks, quote = { text: "", author: "" }, re
   }, [focusId]);
 
   const openNew = () => {
-    setDraft({ id: "t" + Date.now(), title: "", date: today(), status: "open", description: "", notes: "", dateCompleted: null, archived: false, tag: "work" });
+    setDraft({ id: "t" + Date.now(), title: "", date: today(), status: "open", description: "", notes: "", dateCompleted: null, archived: false, tag: "work", backlog: isBacklog });
     setIsNew(true);
     setSelId("new");
   };
@@ -163,6 +172,18 @@ export function ListView({ tasks, setTasks, quote = { text: "", author: "" }, re
   };
   const deleteDraft = () => { if (!draft) return; setTasks((prev) => prev.filter((t) => t.id !== draft.id)); closeDetail(); };
   const deleteTask = (id: string) => setTasks((prev) => prev.filter((t) => t.id !== id));
+  // Move a task between the main dashboard list and the backlog. In backlog
+  // mode this sends it to the dashboard; in dashboard mode it sends it down to
+  // the backlog. New arrivals go to the top of their destination list.
+  const moveToOtherList = (id: string) =>
+    setTasks((prev) => {
+      const idx = prev.findIndex((t) => t.id === id);
+      if (idx < 0) return prev;
+      const arr = [...prev];
+      const [moved] = arr.splice(idx, 1);
+      arr.unshift({ ...moved!, backlog: !isBacklog });
+      return arr;
+    });
   const toggleArchive = (id: string) => setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, archived: !t.archived } : t)));
   const setStatus = (id: string, s: TaskStatus) => setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status: s, dateCompleted: s === "done" ? (t.dateCompleted || today()) : null } : t)));
 
@@ -175,7 +196,7 @@ export function ListView({ tasks, setTasks, quote = { text: "", author: "" }, re
 
   const addQuick = () => {
     if (!quickTitle.trim()) return;
-    const t: Task = { id: "t" + Date.now(), title: quickTitle.trim(), date: quickDate || today(), status: "open", description: "", notes: "", dateCompleted: null, archived: false, tag: quickTag };
+    const t: Task = { id: "t" + Date.now(), title: quickTitle.trim(), date: quickDate || today(), status: "open", description: "", notes: "", dateCompleted: null, archived: false, tag: quickTag, backlog: isBacklog };
     setTasks((prev) => [t, ...prev]);
     setQuickTitle("");
     setQuickDate("");
@@ -248,13 +269,13 @@ export function ListView({ tasks, setTasks, quote = { text: "", author: "" }, re
     <>
       <div className="view-head" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div>
-          <span className="eyebrow"><span className="slash">/</span>Today</span>
-          <h1 className="view-title">My List</h1>
+          <span className="eyebrow"><span className="slash">/</span>{isBacklog ? "Not prioritized" : "Today"}</span>
+          <h1 className="view-title">{isBacklog ? "Backlog" : "My List"}</h1>
         </div>
         <button className="btn btn-red" onClick={openNew} type="button"><Icons.Plus size={15} />Add Task</button>
       </div>
 
-      {reminders.length > 0 && (
+      {!isBacklog && reminders.length > 0 && (
         <div className="rem-block">
           <span className="eyebrow"><span className="slash">/</span>Daily Reminders</span>
           <div className="reminders">
@@ -263,11 +284,13 @@ export function ListView({ tasks, setTasks, quote = { text: "", author: "" }, re
         </div>
       )}
 
-      <div className="quote-banner">
-        <div className="qlabel">Quote of the Time</div>
-        <div className="qtext">&ldquo;{quote.text}&rdquo;</div>
-        {quote.author && <div className="qauthor">— {quote.author}</div>}
-      </div>
+      {!isBacklog && (
+        <div className="quote-banner">
+          <div className="qlabel">Quote of the Time</div>
+          <div className="qtext">&ldquo;{quote.text}&rdquo;</div>
+          {quote.author && <div className="qauthor">— {quote.author}</div>}
+        </div>
+      )}
 
       <div className="filterbar">
         <span className="fb-label">Filter</span>
@@ -287,10 +310,14 @@ export function ListView({ tasks, setTasks, quote = { text: "", author: "" }, re
           <option value="date">Date</option>
           <option value="status">Status</option>
         </select>
-        <div className="fb-seg">
-          <button type="button" className={!showArchived ? "on" : ""} onClick={() => setShowArchived(false)}>Active</button>
-          <button type="button" className={showArchived ? "on" : ""} onClick={() => setShowArchived(true)}>Archived</button>
-        </div>
+        {/* Active/Archived view toggle lives on the Backlog only — the main
+            dashboard list always shows active tasks. */}
+        {isBacklog && (
+          <div className="fb-seg">
+            <button type="button" className={!showArchived ? "on" : ""} onClick={() => setShowArchived(false)}>Active</button>
+            <button type="button" className={showArchived ? "on" : ""} onClick={() => setShowArchived(true)}>Archived</button>
+          </div>
+        )}
         {filterActive && <button className="btn btn-ghost btn-sm" type="button" onClick={() => { setStatusF("all"); setFromD(""); setToD(""); setSortBy("manual"); }}>Clear</button>}
         <span className="fb-note">
           {reorderEnabled ? <span>Drag to reorder</span> : <span><b>Reorder locked</b> — numbers hold</span>}
@@ -313,7 +340,7 @@ export function ListView({ tasks, setTasks, quote = { text: "", author: "" }, re
       )}
 
       <div className="tasklist">
-        {display.length === 0 && <div className="list-empty">{showArchived ? "No archived tasks." : "No tasks match this filter."}</div>}
+        {display.length === 0 && <div className="list-empty">{showArchived ? "No archived tasks." : isBacklog ? "Backlog is empty. Move lower-priority tasks here from your list." : "No tasks match this filter."}</div>}
 
         {display.map((t) => (
           <div
@@ -360,6 +387,24 @@ export function ListView({ tasks, setTasks, quote = { text: "", author: "" }, re
                   </button>
                 </>
               )}
+              <button
+                onClick={() => moveToOtherList(t.id)}
+                aria-label={isBacklog ? "Move to dashboard" : "Move to backlog"}
+                title={isBacklog ? "Move to dashboard" : "Move to backlog"}
+                type="button"
+              >
+                {isBacklog ? (
+                  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <line x1="12" y1="19" x2="12" y2="5" />
+                    <polyline points="5 12 12 5 19 12" />
+                  </svg>
+                ) : (
+                  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <polyline points="19 12 12 19 5 12" />
+                  </svg>
+                )}
+              </button>
               <button onClick={() => startEdit(t)} aria-label="Edit title" title="Edit title" type="button"><Icons.Edit size={14} /></button>
               <button onClick={() => toggleArchive(t.id)} aria-label={t.archived ? "Unarchive" : "Archive"} title={t.archived ? "Unarchive" : "Archive"} type="button"><Icons.Archive size={14} /></button>
               <button onClick={() => deleteTask(t.id)} aria-label="Delete task" title="Delete" type="button"><Icons.Trash size={14} /></button>

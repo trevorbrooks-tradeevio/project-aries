@@ -39,7 +39,11 @@
   --text-2: rgba(255, 255, 255, 0.62);
   --text-3: rgba(255, 255, 255, 0.34);
   --sidebar: #2a1414;
+  --sidebar-fg: #ffffff;
   --sidebar-item: rgba(255, 255, 255, 0.55);
+  --sidebar-active-bg: rgba(255, 255, 255, 0.1);
+  --sidebar-active-fg: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
   --chip-neutral-bg: rgba(255, 255, 255, 0.08);
   --chip-neutral-fg: rgba(255, 255, 255, 0.7);
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
@@ -48,22 +52,28 @@
 
 /* ── LIGHT (default) ── */
 .dash[data-theme="light"] {
-  --app-bg: #f4efe8;
-  --app-bg-2: #efe9e0;
-  --panel: #fdffff;
-  --panel-2: #f4efe8;
-  --panel-hover: #faf3ee;
-  --border: rgba(17, 17, 17, 0.1);
-  --border-strong: rgba(17, 17, 17, 0.18);
-  --text: #111111;
-  --text-2: rgba(17, 17, 17, 0.6);
-  --text-3: rgba(17, 17, 17, 0.4);
-  --sidebar: #3e1e1e;
-  --sidebar-item: rgba(255, 255, 255, 0.6);
+  --app-bg: #f7f3ec;
+  --app-bg-2: #f0eae0;
+  --panel: #ffffff;
+  --panel-2: #f7f3ec;
+  --panel-hover: #faf6f0;
+  --border: rgba(28, 25, 23, 0.1);
+  --border-strong: rgba(28, 25, 23, 0.18);
+  --text: #1c1917;
+  --text-2: rgba(28, 25, 23, 0.62);
+  --text-3: rgba(28, 25, 23, 0.4);
+  /* Monarch-style light sidebar: near-white surface, dark ink items,
+     soft pill highlight on the active item. */
+  --sidebar: #fbf9f4;
+  --sidebar-fg: #1c1917;
+  --sidebar-item: rgba(28, 25, 23, 0.62);
+  --sidebar-active-bg: rgba(28, 25, 23, 0.07);
+  --sidebar-active-fg: #1c1917;
+  --sidebar-border: rgba(28, 25, 23, 0.08);
   --chip-neutral-bg: rgba(17, 17, 17, 0.06);
   --chip-neutral-fg: rgba(17, 17, 17, 0.62);
-  --shadow: 0 10px 30px rgba(17, 17, 17, 0.12);
-  --overlay: rgba(17, 17, 17, 0.4);
+  --shadow: 0 6px 24px rgba(28, 25, 23, 0.08);
+  --overlay: rgba(28, 25, 23, 0.4);
 }
 
 .dash * { box-sizing: border-box; }
@@ -739,4 +749,108 @@
 .dash .fab svg { width: 24px; height: 24px; }
 @media (min-width: 1024px) {
   .dash .fab { display: none; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   GOALS — one rounded card per goal group, rich-text body.
+───────────────────────────────────────────────────────── */
+.dash .goal-grid {
+  display: grid; grid-template-columns: 1fr; gap: 14px; max-width: 980px;
+}
+@media (min-width: 1024px) {
+  .dash .goal-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.dash .goal-card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 16px; padding: 18px 20px; box-shadow: var(--shadow);
+}
+.dash .goal-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 10px;
+}
+.dash .goal-title {
+  font-family: var(--font-heading, "Barlow Condensed", sans-serif);
+  font-weight: 800; font-size: 16px; text-transform: uppercase;
+  letter-spacing: 0.03em; color: var(--text); margin: 0;
+}
+.dash .goal-title-input {
+  flex: 1; min-width: 0; background: var(--panel-2); border: 1px solid var(--accent);
+  border-radius: 8px; padding: 6px 9px; outline: none; color: var(--text);
+  font-family: var(--font-heading, "Barlow Condensed", sans-serif);
+  font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.03em;
+}
+.dash .goal-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.dash .goal-actions button {
+  background: transparent; border: 1px solid var(--border); border-radius: 9px;
+  color: var(--text-2); cursor: pointer; width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+}
+.dash .goal-actions button:hover { border-color: var(--accent); color: var(--accent); }
+.dash .goal-body {
+  font-family: var(--font-body); font-size: 14px; font-weight: 300;
+  color: var(--text-2); line-height: 1.7;
+}
+.dash .goal-body ul { margin: 0; padding-left: 20px; list-style: disc; }
+.dash .goal-body ol { margin: 0; padding-left: 20px; list-style: decimal; }
+.dash .goal-body li { margin: 2px 0; }
+.dash .goal-body p { margin: 0 0 6px; }
+
+/* ─────────────────────────────────────────────────────────
+   SOFT UI REFRESH — Monarch-inspired polish (July 2026).
+   Generous radii, pill controls, light sidebar (light theme) with a
+   soft pill on the active nav item instead of the red left bar.
+   Colors come from the theme variable blocks at the top; these
+   overrides only reshape existing components, so they live at the
+   end of the file and win by source order. Token reference:
+   app/theme.css, documented at /style-guide.
+───────────────────────────────────────────────────────── */
+
+/* Sidebar / nav */
+.dash .sidebar { border-right: 1px solid var(--sidebar-border, var(--border)); }
+.dash .sidebar-nav { padding: 0 14px; }
+.dash .nav-item { border-radius: 12px; }
+.dash .nav-item:hover { color: var(--sidebar-active-fg, #fff); background: var(--sidebar-active-bg, transparent); }
+.dash .nav-item.active { color: var(--sidebar-active-fg, #fff); background: var(--sidebar-active-bg, transparent); }
+.dash .nav-item.active::before { display: none; }
+.dash .sidebar-foot { border-top-color: var(--sidebar-border, var(--border)); }
+.dash .sidebar-foot .who .n { color: var(--sidebar-fg, #fff); }
+.dash .sidebar .icon-btn:hover { color: var(--sidebar-active-fg, #fff); }
+
+/* Bottom nav (phone) + its More menu */
+.dash .bottom-nav { border-top-color: var(--sidebar-border, var(--border)); }
+.dash .bnav-item.active { color: var(--sidebar-active-fg, #fff); }
+.dash .bnav-more-menu { border-radius: 16px; border-color: var(--sidebar-border, var(--border)); }
+.dash .bnav-more-item:hover, .dash .bnav-more-item:active { color: var(--sidebar-active-fg, #fff); background: var(--sidebar-active-bg, var(--panel-hover)); }
+.dash .bnav-more-item + .dash .bnav-more-item,
+.dash .bnav-more-item + .bnav-more-item { border-top-color: var(--sidebar-border, var(--border)); }
+
+/* Cards + rows */
+.dash .task-row, .dash .reminder, .dash .filterbar, .dash .quick-add,
+.dash .note-item, .dash .note-search, .dash .quote-row, .dash .cal-empty,
+.dash .search { border-radius: 12px; }
+.dash .task-row::before, .dash .reminder::before { top: 10px; bottom: 10px; border-radius: 99px; }
+.dash .quote-banner { border-radius: 16px; }
+.dash .quote-banner::before { top: 16px; bottom: 16px; border-radius: 99px; }
+.dash .note-editor { border-radius: 16px; overflow: hidden; }
+.dash .cal-grid { border-radius: 14px; overflow: hidden; }
+.dash .cal-week { border-radius: 14px; }
+.dash .cal-ev { border-radius: 5px; }
+.dash .cal-nav button { border-radius: 9px; }
+
+/* Controls */
+.dash .seg, .dash .fb-seg, .dash .theme-toggle { border-radius: 999px; overflow: hidden; }
+.dash .select, .dash .inp, .dash .field textarea, .dash .quick-add input.qa-date { border-radius: 10px; }
+.dash .chip, .dash .tag { border-radius: 999px; }
+.dash .t-actions button, .dash .qr-actions button { border-radius: 9px; }
+.dash .pin-btn { border-radius: 999px; }
+.dash .rte { border-radius: 12px; overflow: hidden; }
+.dash .t-title-input { border-radius: 8px; }
+
+/* Overlays + sheets */
+.dash .status-menu, .dash .search-results { border-radius: 12px; }
+.dash .modal { border-radius: 16px; overflow: hidden; }
+.dash .panel { border-radius: 16px 0 0 16px; }
+@media (max-width: 1023px) {
+  /* Full-width sheet on phone — square edges read better edge-to-edge. */
+  .dash .panel { border-radius: 0; }
 }

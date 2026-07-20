@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { barlow, barlowCondensed } from "./fonts";
 import { PWARegister } from "./_components/PWARegister";
 import "./globals.css";
+import "./theme.css";
 
 export const metadata: Metadata = {
   title: "Aries — Personal Dashboard",
