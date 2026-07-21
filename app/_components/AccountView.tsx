@@ -34,10 +34,14 @@ type AccountViewProps = {
   setReminders: (updater: string[] | ((prev: string[]) => string[])) => void;
   timezone: string;
   setTimezone: (updater: string | ((prev: string) => string)) => void;
+  theme: "dark" | "light";
+  setTheme: (t: "dark" | "light") => void;
+  onSignOut: () => void;
 };
 
 export function AccountView({
   profile, setProfile, quote, setQuote, reminders, setReminders, timezone, setTimezone,
+  theme, setTheme, onSignOut,
 }: AccountViewProps) {
   // Local drafts — nothing persists until Save.
   const [pDraft, setPDraft] = useState<Profile>(profile);
@@ -153,6 +157,20 @@ export function AccountView({
         </div>
       </section>
 
+      {/* Appearance — theme applies immediately, independent of Save. */}
+      <section className="acct-card">
+        <div className="acct-card-head">
+          <span className="eyebrow"><span className="slash">/</span>Appearance</span>
+        </div>
+        <div className="field">
+          <label>Theme</label>
+          <div className="fb-seg acct-theme-seg">
+            <button type="button" className={theme === "light" ? "on" : ""} onClick={() => setTheme("light")}><Icons.Sun size={14} />Light</button>
+            <button type="button" className={theme === "dark" ? "on" : ""} onClick={() => setTheme("dark")}><Icons.Moon size={14} />Dark</button>
+          </div>
+        </div>
+      </section>
+
       {/* Time zone */}
       <section className="acct-card">
         <div className="acct-card-head">
@@ -207,6 +225,18 @@ export function AccountView({
           <label>Author <span className="acct-optional">(optional)</span></label>
           <input className="inp" value={qDraft.author} placeholder="Who said it" onChange={(e) => setQDraft((q) => ({ ...q, author: e.target.value }))} />
         </div>
+      </section>
+
+      {/* Sign out */}
+      <section className="acct-card">
+        <button className="btn btn-ghost acct-signout" type="button" onClick={onSignOut}>
+          <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          Sign out
+        </button>
       </section>
     </>
   );

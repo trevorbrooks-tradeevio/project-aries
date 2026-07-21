@@ -978,3 +978,94 @@
   margin-bottom: 12px;
 }
 .dash .placeholder-blurb { color: var(--text-3); font-size: 14px; max-width: 420px; margin: 0 auto; }
+
+/* Account: theme segmented control (icon + label) */
+.dash .acct-theme-seg { width: fit-content; }
+.dash .acct-theme-seg button { display: inline-flex; align-items: center; gap: 6px; }
+/* Account: sign out */
+.dash .acct-signout { display: inline-flex; align-items: center; gap: 8px; color: var(--accent); border-color: var(--accent); }
+.dash .acct-signout:hover { background: var(--panel-hover); }
+
+/* ─────────────────────────────────────────────────────────
+   HEADERLESS MOBILE + SAFE AREAS (July 2026).
+   The date/theme/sign-out moved to the Account page, so the phone has no
+   top bar. Hide it under 1024px and pad the scroll area down past the
+   status bar. The bottom nav extends into the home-indicator safe area so
+   it reaches the physical bottom edge instead of floating above it.
+───────────────────────────────────────────────────────── */
+.dash { background: var(--app-bg); }
+
+@media (max-width: 1023px) {
+  .dash .topbar { display: none; }
+  /* Clear the iOS/Android status bar since content now starts at the top. */
+  .dash .content { padding-top: calc(20px + env(safe-area-inset-top)); }
+}
+
+/* Fill the bottom safe area with the nav's own background. */
+.dash .bottom-nav { padding-bottom: env(safe-area-inset-bottom); }
+
+/* ─────────────────────────────────────────────────────────
+   MORE DRAWER (phone) — slides in from the right. Settings gear at the
+   top, scrollable nav list in the middle, profile pinned to the bottom.
+───────────────────────────────────────────────────────── */
+.dash .more-backdrop {
+  position: fixed; inset: 0; z-index: 40;
+  background: var(--overlay, rgba(0, 0, 0, 0.5));
+  opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+}
+.dash .more-backdrop.show { opacity: 1; pointer-events: auto; }
+
+.dash .more-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 41;
+  width: min(86vw, 340px);
+  display: flex; flex-direction: column;
+  background: var(--sidebar);
+  border-left: 1px solid var(--sidebar-border, var(--border));
+  box-shadow: -14px 0 40px rgba(0, 0, 0, 0.3);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  transform: translateX(100%);
+  transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dash .more-drawer.open { transform: translateX(0); }
+@media (min-width: 1024px) {
+  .dash .more-drawer, .dash .more-backdrop { display: none; }
+}
+
+.dash .md-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px; border-bottom: 1px solid var(--sidebar-border, var(--border));
+}
+.dash .md-title {
+  font-family: var(--font-heading, "Barlow Condensed", sans-serif);
+  font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em;
+  color: var(--sidebar-fg, #fff);
+}
+.dash .md-head-actions { display: flex; align-items: center; gap: 4px; }
+.dash .md-icon {
+  background: transparent; border: none; cursor: pointer; color: var(--sidebar-item);
+  display: flex; align-items: center; justify-content: center; padding: 8px; border-radius: 10px;
+}
+.dash .md-icon:hover { color: var(--sidebar-active-fg, #fff); background: var(--sidebar-active-bg, var(--panel-hover)); }
+
+.dash .md-nav { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; padding: 12px; }
+.dash .md-item {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  padding: 13px 14px; border: none; background: transparent; cursor: pointer; border-radius: 12px;
+  color: var(--sidebar-item);
+  font-family: var(--font-heading, "Barlow Condensed", sans-serif);
+  font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.dash .md-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+.dash .md-item:hover, .dash .md-item.active { color: var(--sidebar-active-fg, #fff); background: var(--sidebar-active-bg, var(--panel-hover)); }
+
+.dash .md-profile {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; cursor: pointer;
+  padding: 16px 18px; background: transparent; border: none;
+  border-top: 1px solid var(--sidebar-border, var(--border));
+}
+.dash .md-profile:hover, .dash .md-profile.active { background: var(--sidebar-active-bg, var(--panel-hover)); }
+.dash .md-profile .who { flex: 1; min-width: 0; }
+.dash .md-profile .who .n { font-size: 14px; font-weight: 600; color: var(--sidebar-fg, #fff); }
+.dash .md-profile .who .r { font-size: 11px; color: var(--sidebar-item); }
+.dash .md-profile .md-profile-gear { color: var(--sidebar-item); display: flex; flex-shrink: 0; }

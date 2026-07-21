@@ -23,15 +23,6 @@ import { DEFAULT_PROFILE, initialsFrom } from "../_lib/profile";
 import { useAuth } from "../_lib/auth";
 import type { Task, Note, Profile, View } from "../_lib/types";
 
-function formatTodayLabel(d: Date, timeZone?: string) {
-  // An empty/undefined time zone means "device default" — omit the option so
-  // toLocaleDateString uses the local zone.
-  const tz = timeZone || undefined;
-  const parts = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "2-digit", year: "numeric", timeZone: tz });
-  // Intl gives "Mon, Jul 20, 2026"; reshape to the app's "Mon · Jul 20, 2026".
-  const m = parts.match(/^(\w+), (\w+ \d+), (\d+)$/);
-  return m ? `${m[1]} · ${m[2]}, ${m[3]}` : parts;
-}
 
 const NAV: { id: View; label: string; icon: IconName }[] = [
   { id: "list", label: "List", icon: "List" },
@@ -140,9 +131,6 @@ export function DashApp() {
   const [reminders, setReminders] = useLocalState<string[]>("reminders", SEED_DATA.reminders);
   const [profile, setProfile] = useLocalState<Profile>("profile", DEFAULT_PROFILE);
   const [timezone, setTimezone] = useLocalState<string>("timezone", "");
-
-  const [todayLabel, setTodayLabel] = useState("");
-  useEffect(() => { setTodayLabel(formatTodayLabel(new Date(), timezone)); }, [timezone]);
 
   // Keep the PWA/browser status-bar color in sync with the chosen theme so the
   // installed app's chrome matches the shell (light shell vs. dark shell).
@@ -262,21 +250,6 @@ export function DashApp() {
                 <line x1="9" y1="4" x2="9" y2="20" />
               </svg>
             </button>
-            <div className="brand-mini"><BrandMini /></div>
-            <span className="date">{todayLabel}</span>
-            <div className="topbar-actions">
-              <div className="theme-toggle">
-                <button className={theme === "light" ? "on" : ""} onClick={() => setTheme("light")} aria-label="Light theme" type="button"><Icons.Sun size={15} /></button>
-                <button className={theme === "dark" ? "on" : ""} onClick={() => setTheme("dark")} aria-label="Dark theme" type="button"><Icons.Moon size={15} /></button>
-              </div>
-              <button className="icon-btn signout" aria-label="Sign out" title="Sign out" type="button" onClick={() => void signOut()}>
-                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                  <polyline points="16 17 21 12 16 7" />
-                  <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-              </button>
-            </div>
           </div>
 
           <div className="content" ref={contentRef}>
@@ -287,7 +260,7 @@ export function DashApp() {
             {view === "goals" && <GoalsView />}
             {view === "budget" && <Placeholder eyebrow="Money" title="Budget" blurb="Track income, expenses, and savings here. This section is a placeholder for now." />}
             {view === "diet" && <Placeholder eyebrow="Health" title="Diet" blurb="Log meals, macros, and habits here. This section is a placeholder for now." />}
-            {view === "account" && <AccountView profile={profile} setProfile={setProfile} quote={quote} setQuote={setQuote} reminders={reminders} setReminders={setReminders} timezone={timezone} setTimezone={setTimezone} />}
+            {view === "account" && <AccountView profile={profile} setProfile={setProfile} quote={quote} setQuote={setQuote} reminders={reminders} setReminders={setReminders} timezone={timezone} setTimezone={setTimezone} theme={theme} setTheme={setTheme} onSignOut={() => void signOut()} />}
           </div>
 
           {/* Bottom nav (phone) */}
@@ -315,53 +288,49 @@ export function DashApp() {
                 </svg>
                 More
               </button>
-              {moreOpen && (
-                <>
-                  <div className="bnav-more-backdrop" onClick={() => setMoreOpen(false)} />
-                  <div className="bnav-more-menu" role="menu">
-                    <button
-                      type="button"
-                      className={"bnav-more-item" + (view === "backlog" ? " active" : "")}
-                      role="menuitem"
-                      onClick={() => { setView("backlog"); setMoreOpen(false); }}
-                    >
-                      <BacklogIcon size={18} />Backlog
-                    </button>
-                    <button
-                      type="button"
-                      className={"bnav-more-item" + (view === "budget" ? " active" : "")}
-                      role="menuitem"
-                      onClick={() => { setView("budget"); setMoreOpen(false); }}
-                    >
-                      <BudgetIcon size={18} />Budget
-                    </button>
-                    <button
-                      type="button"
-                      className={"bnav-more-item" + (view === "diet" ? " active" : "")}
-                      role="menuitem"
-                      onClick={() => { setView("diet"); setMoreOpen(false); }}
-                    >
-                      <DietIcon size={18} />Diet
-                    </button>
-                    <Link href="/roadmap" className="bnav-more-item" role="menuitem" onClick={() => setMoreOpen(false)}>
-                      <RoadmapIcon size={18} />Roadmap
-                    </Link>
-                    <Link href="/releases" className="bnav-more-item" role="menuitem" onClick={() => setMoreOpen(false)}>
-                      <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M12 2 2 7l10 5 10-5-10-5Z" />
-                        <path d="m2 17 10 5 10-5" />
-                        <path d="m2 12 10 5 10-5" />
-                      </svg>
-                      Releases
-                    </Link>
-                    <Link href="/style-guide" className="bnav-more-item" role="menuitem" onClick={() => setMoreOpen(false)}>
-                      <StyleGuideIcon size={18} />Style Guide
-                    </Link>
-                  </div>
-                </>
-              )}
             </div>
           </nav>
+
+          {/* Slide-in menu drawer (phone). Opens from the right: settings gear
+              at the top, nav list in the middle, profile pinned to the bottom.
+              Always rendered so it can animate; toggled by the `open` class. */}
+          <div className={"more-backdrop" + (moreOpen ? " show" : "")} onClick={() => setMoreOpen(false)} />
+          <aside className={"more-drawer" + (moreOpen ? " open" : "")} role="dialog" aria-modal="true" aria-hidden={!moreOpen}>
+            <div className="md-head">
+              <span className="md-title">Menu</span>
+              <div className="md-head-actions">
+                <button className="md-icon" type="button" aria-label="Settings" onClick={() => { setView("account"); setMoreOpen(false); }}><Icons.Gear size={20} /></button>
+                <button className="md-icon" type="button" aria-label="Close menu" onClick={() => setMoreOpen(false)}>
+                  <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                </button>
+              </div>
+            </div>
+            <nav className="md-nav">
+              <button type="button" className={"md-item" + (view === "backlog" ? " active" : "")} onClick={() => { setView("backlog"); setMoreOpen(false); }}><BacklogIcon size={20} />Backlog</button>
+              <button type="button" className={"md-item" + (view === "budget" ? " active" : "")} onClick={() => { setView("budget"); setMoreOpen(false); }}><BudgetIcon size={20} />Budget</button>
+              <button type="button" className={"md-item" + (view === "diet" ? " active" : "")} onClick={() => { setView("diet"); setMoreOpen(false); }}><DietIcon size={20} />Diet</button>
+              <Link href="/roadmap" className="md-item" onClick={() => setMoreOpen(false)}><RoadmapIcon size={20} />Roadmap</Link>
+              <Link href="/releases" className="md-item" onClick={() => setMoreOpen(false)}>
+                <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 2 2 7l10 5 10-5-10-5Z" />
+                  <path d="m2 17 10 5 10-5" />
+                  <path d="m2 12 10 5 10-5" />
+                </svg>
+                Releases
+              </Link>
+              <Link href="/style-guide" className="md-item" onClick={() => setMoreOpen(false)}><StyleGuideIcon size={20} />Style Guide</Link>
+            </nav>
+            <button className={"md-profile" + (view === "account" ? " active" : "")} type="button" onClick={() => { setView("account"); setMoreOpen(false); }}>
+              <div className="avatar">
+                {profile.avatar ? <img className="avatar-img" src={profile.avatar} alt="" /> : initialsFrom(profile.name)}
+              </div>
+              <div className="who">
+                <div className="n">{profile.name}</div>
+                {profile.role && <div className="r">{profile.role}</div>}
+              </div>
+              <span className="md-profile-gear"><Icons.Gear size={16} /></span>
+            </button>
+          </aside>
         </div>
       </div>
     </div>
