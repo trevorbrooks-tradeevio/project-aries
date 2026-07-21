@@ -270,7 +270,7 @@ export function ListView({ tasks, setTasks, quote = { text: "", author: "" }, re
       <div className="view-head" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div>
           <span className="eyebrow"><span className="slash">/</span>{isBacklog ? "Not prioritized" : "Today"}</span>
-          <h1 className="view-title">{isBacklog ? "Backlog" : "My List"}</h1>
+          <h1 className="view-title">{isBacklog ? "Backlog" : "Main"}</h1>
         </div>
         <button className="btn btn-red" onClick={openNew} type="button"><Icons.Plus size={15} />Add Task</button>
       </div>

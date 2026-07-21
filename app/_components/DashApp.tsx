@@ -26,7 +26,7 @@ import type { Task, Note, Profile, View, CalendarEvents } from "../_lib/types";
 
 
 const NAV: { id: View; label: string; icon: IconName }[] = [
-  { id: "list", label: "List", icon: "List" },
+  { id: "list", label: "Main", icon: "List" },
   { id: "notes", label: "Notes", icon: "Notes" },
   { id: "calendar", label: "Calendar", icon: "Calendar" },
   { id: "goals", label: "Goals", icon: "Goal" },
