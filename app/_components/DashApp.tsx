@@ -10,7 +10,7 @@
    original implementation lives in git history if you need it back. */
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Icons, type IconName } from "./Icons";
 import { ListView } from "./ListView";
 import { NotesView } from "./NotesView";
@@ -21,7 +21,8 @@ import { SEED_DATA } from "../_lib/data";
 import { useCloudState as useLocalState } from "../_lib/cloudState";
 import { DEFAULT_PROFILE, initialsFrom } from "../_lib/profile";
 import { useAuth } from "../_lib/auth";
-import type { Task, Note, Profile, View } from "../_lib/types";
+import { fetchGoogleCalendarEvents } from "../_lib/googleCalendar";
+import type { Task, Note, Profile, View, CalendarEvents } from "../_lib/types";
 
 
 const NAV: { id: View; label: string; icon: IconName }[] = [
@@ -107,7 +108,7 @@ function BrandMini({ big, onSidebar }: { big?: boolean; onSidebar?: boolean }) {
 
 export function DashApp() {
   const [theme, setTheme] = useLocalState<"dark" | "light">("theme", "light");
-  const { signOut } = useAuth();
+  const { signOut, connectCalendar, calendarToken } = useAuth();
   const [moreOpen, setMoreOpen] = useState(false);
   const [sidebarHidden, setSidebarHidden] = useLocalState<boolean>("sidebarHidden", false);
   const [view, setView] = useState<View>("list");
@@ -131,6 +132,36 @@ export function DashApp() {
   const [reminders, setReminders] = useLocalState<string[]>("reminders", SEED_DATA.reminders);
   const [profile, setProfile] = useLocalState<Profile>("profile", DEFAULT_PROFILE);
   const [timezone, setTimezone] = useLocalState<string>("timezone", "");
+
+  // Google Calendar (read-only, in-memory for the session — never persisted).
+  const [googleEvents, setGoogleEvents] = useState<CalendarEvents>({});
+  const [gcalStatus, setGcalStatus] = useState<"idle" | "loading" | "connected" | "error">("idle");
+  const [gcalError, setGcalError] = useState("");
+
+  const loadGoogle = useCallback(async (token: string) => {
+    setGcalStatus("loading"); setGcalError("");
+    try {
+      setGoogleEvents(await fetchGoogleCalendarEvents(token));
+      setGcalStatus("connected");
+    } catch (e) {
+      setGcalStatus("error");
+      setGcalError(e instanceof Error ? e.message : "Failed to load calendar.");
+    }
+  }, []);
+
+  // Fetch whenever we have a token (popup success or redirect return).
+  useEffect(() => { if (calendarToken) void loadGoogle(calendarToken); }, [calendarToken, loadGoogle]);
+
+  const connectGoogle = async () => {
+    setGcalStatus("loading"); setGcalError("");
+    try {
+      await connectCalendar(); // token lands in context → effect above loads events
+    } catch (e) {
+      setGcalStatus("error");
+      setGcalError(e instanceof Error ? e.message : "Couldn't connect to Google.");
+    }
+  };
+  const refreshGoogle = () => { if (calendarToken) void loadGoogle(calendarToken); else void connectGoogle(); };
 
   // Keep the PWA/browser status-bar color in sync with the chosen theme so the
   // installed app's chrome matches the shell (light shell vs. dark shell).
@@ -260,7 +291,7 @@ export function DashApp() {
             {view === "list" && <ListView tasks={tasks} setTasks={setTasks} quote={quote} reminders={reminders} />}
             {view === "backlog" && <ListView tasks={tasks} setTasks={setTasks} mode="backlog" />}
             {view === "notes" && <NotesView notes={notes} setNotes={setNotes} />}
-            {view === "calendar" && <CalendarView events={SEED_DATA.events} tasks={tasks} />}
+            {view === "calendar" && <CalendarView events={googleEvents} tasks={tasks} onConnectGoogle={connectGoogle} onRefreshGoogle={refreshGoogle} googleStatus={gcalStatus} googleError={gcalError} />}
             {view === "goals" && <GoalsView />}
             {view === "budget" && <Placeholder eyebrow="Money" title="Budget" blurb="Track income, expenses, and savings here. This section is a placeholder for now." />}
             {view === "diet" && <Placeholder eyebrow="Health" title="Diet" blurb="Log meals, macros, and habits here. This section is a placeholder for now." />}

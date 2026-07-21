@@ -39,7 +39,23 @@ function fmtHour(h: number) {
 
 type Cell = { out: boolean; d: number };
 
-export function CalendarView({ events: baseEvents, tasks = [] }: { events: CalendarEvents; tasks?: Task[] }) {
+type GoogleStatus = "idle" | "loading" | "connected" | "error";
+
+export function CalendarView({
+  events: baseEvents,
+  tasks = [],
+  onConnectGoogle,
+  onRefreshGoogle,
+  googleStatus = "idle",
+  googleError = "",
+}: {
+  events: CalendarEvents;
+  tasks?: Task[];
+  onConnectGoogle?: () => void;
+  onRefreshGoogle?: () => void;
+  googleStatus?: GoogleStatus;
+  googleError?: string;
+}) {
   // Merge task-derived events (any non-archived task with a date) into the
   // calendar as a third source, "task" (rendered green).
   const events = useMemo<CalendarEvents>(() => {
@@ -56,11 +72,18 @@ export function CalendarView({ events: baseEvents, tasks = [] }: { events: Calen
     return map;
   }, [baseEvents, tasks]);
 
-  const [connected, setConnected] = useState(true);
   const [mode, setMode] = useState<"month" | "week" | "agenda">("month");
   const now = new Date();
   const [cursor, setCursor] = useState({ y: now.getFullYear(), m: now.getMonth() });
-  const todayIso = new Date().toISOString().slice(0, 10);
+  // Agenda is a single-day view with its own cursor; arrows step one day.
+  const [dayCursor, setDayCursor] = useState(() => new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+  const moveDay = (dir: 1 | -1) => setDayCursor((d) => { const nd = new Date(d); nd.setDate(d.getDate() + dir); return nd; });
+  // Build from LOCAL date parts — toISOString() is UTC, which highlights
+  // tomorrow in the evening for time zones behind UTC.
+  const todayIso = isoDate(now.getFullYear(), now.getMonth(), now.getDate());
+  const dayIso = isoDate(dayCursor.getFullYear(), dayCursor.getMonth(), dayCursor.getDate());
+  const dayLabel = dayCursor.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+  const dayEvents = events[dayIso] || [];
 
   const first = new Date(cursor.y, cursor.m, 1);
   const startDow = first.getDay();
@@ -74,11 +97,6 @@ export function CalendarView({ events: baseEvents, tasks = [] }: { events: Calen
 
   const evFor = (c: Cell) => (c.out ? [] : events[isoDate(cursor.y, cursor.m, c.d)] || []);
   const move = (dir: 1 | -1) => setCursor((c) => { let m = c.m + dir, y = c.y; if (m < 0) { m = 11; y--; } if (m > 11) { m = 0; y++; } return { y, m }; });
-
-  // agenda: flatten events for the month, sorted
-  const agenda = Object.entries(events)
-    .filter(([k]) => k.startsWith(`${cursor.y}-${String(cursor.m + 1).padStart(2, "0")}`))
-    .sort(([a], [b]) => a.localeCompare(b));
 
   // Week view anchors on today's day-of-month when viewing the current
   // month, otherwise the first week row of the displayed month.
@@ -95,23 +113,17 @@ export function CalendarView({ events: baseEvents, tasks = [] }: { events: Calen
         <h1 className="view-title">Calendar</h1>
       </div>
 
-      {!connected ? (
-        <div className="cal-empty">
-          <div className="ce-title">No calendars connected</div>
-          <div className="ce-sub">Connect your accounts to see Google and Outlook events side by side in one unified month view. Events are read-only.</div>
-          <div className="ce-btns">
-            <button className="btn btn-red" onClick={() => setConnected(true)} type="button"><Icons.Plus size={15} />Connect Google</button>
-            <button className="btn btn-red" onClick={() => setConnected(true)} type="button"><Icons.Plus size={15} />Connect Work</button>
-          </div>
-        </div>
-      ) : (
-        <>
+      <>
           <div className="cal-toolbar">
             <div className="cal-nav">
-              <button onClick={() => move(-1)} aria-label="Previous month" type="button"><Icons.ChevL size={16} /></button>
-              <button onClick={() => move(1)} aria-label="Next month" type="button"><Icons.ChevR size={16} /></button>
+              <button onClick={() => (mode === "agenda" ? moveDay(-1) : move(-1))} aria-label={mode === "agenda" ? "Previous day" : "Previous month"} type="button"><Icons.ChevL size={16} /></button>
+              <button onClick={() => (mode === "agenda" ? moveDay(1) : move(1))} aria-label={mode === "agenda" ? "Next day" : "Next month"} type="button"><Icons.ChevR size={16} /></button>
             </div>
-            <div className="cal-month">{MONTHS[cursor.m]} {cursor.y}</div>
+            <div className="cal-month">
+              {mode === "agenda"
+                ? <>{dayLabel}{dayIso === todayIso ? <span className="cal-today-tag"> · Today</span> : ""}</>
+                : `${MONTHS[cursor.m]} ${cursor.y}`}
+            </div>
             <div className="seg" style={{ borderColor: "var(--border-strong)" }}>
               {(["month", "week", "agenda"] as const).map((mo) => (
                 <button key={mo} type="button" className={mode === mo ? "on" : ""} style={mode !== mo ? { color: "var(--text-3)" } : undefined} onClick={() => setMode(mo)}>{mo}</button>
@@ -119,24 +131,33 @@ export function CalendarView({ events: baseEvents, tasks = [] }: { events: Calen
             </div>
             <div className="legend">
               <span className="li"><span className="sw google" />Google</span>
-              <span className="li"><span className="sw outlook" />Work</span>
               <span className="li"><span className="sw task" />Tasks</span>
-              <button className="btn btn-ghost btn-sm" onClick={() => setConnected(false)} type="button">Manage</button>
+              {googleStatus === "connected" ? (
+                <>
+                  <span className="cal-gcal-ok">Google connected</span>
+                  <button className="btn btn-ghost btn-sm" onClick={onRefreshGoogle} type="button">Refresh</button>
+                </>
+              ) : googleStatus === "loading" ? (
+                <button className="btn btn-ghost btn-sm" disabled type="button">Connecting…</button>
+              ) : (
+                <button className="btn btn-red btn-sm" onClick={onConnectGoogle} type="button">
+                  <Icons.Plus size={13} />{googleStatus === "error" ? "Reconnect Google" : "Connect Google"}
+                </button>
+              )}
+              {googleStatus === "error" && googleError && <span className="cal-gcal-err" title={googleError}>Couldn’t connect</span>}
             </div>
           </div>
 
           {mode === "agenda" ? (
             <div className="tasklist">
-              {agenda.length === 0 && <div className="list-empty">No events this month.</div>}
-              {agenda.map(([date, evs]) =>
-                evs.map((e, i) => (
-                  <div key={date + i} className="task-row" style={{ gridTemplateColumns: "auto 1fr auto", cursor: "default" }}>
-                    <div className="t-date-cell" style={{ display: "block", minWidth: 92 }}>{new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
-                    <div className="t-title">{e.title}</div>
-                    <span className="chip"><span className="dot" style={{ background: e.src === "google" ? "var(--accent)" : e.src === "outlook" ? "#2f6fd0" : "#2ecc71" }} />{e.time || (e.src === "task" ? "Task" : "")}</span>
-                  </div>
-                ))
-              )}
+              {dayEvents.length === 0 && <div className="list-empty">Nothing scheduled for this day.</div>}
+              {dayEvents.map((e, i) => (
+                <div key={i} className="task-row" style={{ gridTemplateColumns: "auto 1fr auto", cursor: "default" }}>
+                  <div className="t-date-cell" style={{ display: "block", minWidth: 64 }}>{e.time ? fmtTime(e.time) : (e.src === "task" ? "Task" : "All day")}</div>
+                  <div className="t-title">{e.title}</div>
+                  <span className="chip"><span className="dot" style={{ background: e.src === "google" ? "var(--accent)" : e.src === "outlook" ? "#2f6fd0" : "#2ecc71" }} />{e.src === "google" ? "Google" : e.src === "outlook" ? "Work" : "Task"}</span>
+                </div>
+              ))}
             </div>
           ) : mode === "week" ? (
             <div className="cal-week">
@@ -206,7 +227,6 @@ export function CalendarView({ events: baseEvents, tasks = [] }: { events: Calen
             </div>
           )}
         </>
-      )}
     </>
   );
 }

@@ -983,6 +983,13 @@
 }
 .dash .placeholder-blurb { color: var(--text-3); font-size: 14px; max-width: 420px; margin: 0 auto; }
 
+/* Calendar agenda: "· Today" tag next to the day label */
+.dash .cal-today-tag { color: var(--accent); font-weight: 700; }
+
+/* Calendar: Google connect status labels in the legend */
+.dash .cal-gcal-ok { display: inline-flex; align-items: center; gap: 4px; color: var(--success); font-size: 12px; font-weight: 600; }
+.dash .cal-gcal-err { color: var(--accent); font-size: 12px; font-weight: 600; }
+
 /* Account: theme segmented control (icon + label) */
 .dash .acct-theme-seg { width: fit-content; }
 .dash .acct-theme-seg button { display: inline-flex; align-items: center; gap: 6px; }
