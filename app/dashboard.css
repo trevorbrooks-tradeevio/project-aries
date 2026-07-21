@@ -1035,8 +1035,20 @@
   }
 }
 
-/* Fill the bottom safe area with the nav's own background. */
-.dash .bottom-nav { padding-bottom: env(safe-area-inset-bottom); }
+/* Fill the bottom safe area with the nav's own background. The ::after paints
+   the home-indicator strip below the bar: on installed iOS PWAs a fixed
+   bottom:0 bar can leave that safe-area strip showing the page behind it, and
+   padding alone doesn't cover it. top:100% sits it right below the bar; on
+   devices with no inset the height is 0, so it's harmless. */
+.dash .bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: max(env(safe-area-inset-bottom), 6px);
+}
+.dash .bottom-nav::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 100%;
+  height: env(safe-area-inset-bottom);
+  background: var(--sidebar);
+}
 
 /* ─────────────────────────────────────────────────────────
    MORE DRAWER (phone) — slides in from the right. Settings gear at the
