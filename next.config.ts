@@ -7,6 +7,11 @@ const config: NextConfig = {
     // Lint runs locally via `npm run lint`. Don't block production deploys on style.
     ignoreDuringBuilds: true,
   },
+  // Stamped at build time so the app can show which build is actually running
+  // (helps confirm whether the installed PWA picked up a new deploy).
+  env: {
+    NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),
+  },
 };
 
 // Serwist generates public/sw.js (Workbox precache + runtime caching) from

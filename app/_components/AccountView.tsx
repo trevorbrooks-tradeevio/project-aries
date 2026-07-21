@@ -238,6 +238,12 @@ export function AccountView({
           Sign out
         </button>
       </section>
+
+      <p className="acct-note" style={{ textAlign: "center" }}>
+        Build {process.env.NEXT_PUBLIC_BUILD_TIME
+          ? new Date(process.env.NEXT_PUBLIC_BUILD_TIME).toLocaleString()
+          : "dev"}
+      </p>
     </>
   );
 }
