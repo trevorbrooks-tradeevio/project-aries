@@ -23,17 +23,15 @@
      mobile browser chrome. */
   height: 100vh;
   height: 100dvh;
+  /* --app-h is set by DashApp from window.visualViewport.height — the device's
+     real visible height. This is the reliable value on iOS standalone, where
+     100dvh/fill-available disagree with the actual viewport. Falls back to
+     100dvh until JS runs. */
+  height: var(--app-h, 100dvh);
   width: 100%;
-  /* Flex column so .app fills via flex (not percentage), which resolves
-     correctly against -webkit-fill-available below. */
+  /* Flex column so .app fills via flex, not percentage. */
   display: flex;
   flex-direction: column;
-}
-/* iOS Safari / installed PWA only: -webkit-fill-available reaches the true
-   physical bottom of the standalone webview, which 100dvh does not on iPhone
-   (that shortfall is the bottom gap). Scoped so desktop/Android keep 100dvh. */
-@supports (-webkit-touch-callout: none) {
-  .dash { height: -webkit-fill-available; }
 }
 
 /* ── DARK ── */

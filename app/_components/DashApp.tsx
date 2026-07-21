@@ -174,6 +174,27 @@ export function DashApp() {
     document.body.style.backgroundColor = shell;
   }, [theme]);
 
+  // Pin the app shell to the device's REAL visible height. On iOS standalone
+  // PWAs, CSS 100dvh / -webkit-fill-available disagree with the actual viewport
+  // (causing a bottom gap or overshoot); window.visualViewport.height is the
+  // reliable number. Written to --app-h, which .dash consumes.
+  useEffect(() => {
+    const setAppHeight = () => {
+      const h = window.visualViewport?.height ?? window.innerHeight;
+      if (h) document.documentElement.style.setProperty("--app-h", `${Math.round(h)}px`);
+    };
+    setAppHeight();
+    const vv = window.visualViewport;
+    vv?.addEventListener("resize", setAppHeight);
+    window.addEventListener("resize", setAppHeight);
+    window.addEventListener("orientationchange", setAppHeight);
+    return () => {
+      vv?.removeEventListener("resize", setAppHeight);
+      window.removeEventListener("resize", setAppHeight);
+      window.removeEventListener("orientationchange", setAppHeight);
+    };
+  }, []);
+
   // Header scroll-hide/reveal: the header slides up out of view on scroll-down
   // and eases back in on scroll-up. Content scrolls inside `.content` (the app
   // shell is viewport-bounded), so we listen there rather than on window.
