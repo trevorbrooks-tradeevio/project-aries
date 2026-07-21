@@ -24,6 +24,16 @@
   height: 100vh;
   height: 100dvh;
   width: 100%;
+  /* Flex column so .app fills via flex (not percentage), which resolves
+     correctly against -webkit-fill-available below. */
+  display: flex;
+  flex-direction: column;
+}
+/* iOS Safari / installed PWA only: -webkit-fill-available reaches the true
+   physical bottom of the standalone webview, which 100dvh does not on iPhone
+   (that shortfall is the bottom gap). Scoped so desktop/Android keep 100dvh. */
+@supports (-webkit-touch-callout: none) {
+  .dash { height: -webkit-fill-available; }
 }
 
 /* ── DARK ── */
@@ -93,7 +103,10 @@
 ───────────────────────────────────────────────────────── */
 .dash .app {
   width: 100%;
-  height: 100%;
+  /* Fill .dash via flex rather than height:100% — a percentage height doesn't
+     resolve reliably against a -webkit-fill-available parent on iOS. */
+  flex: 1 1 auto;
+  min-height: 0;
   background: var(--app-bg);
   color: var(--text);
   overflow: hidden;
@@ -220,7 +233,7 @@
 /* ─────────────────────────────────────────────────────────
    MAIN + TOPBAR
 ───────────────────────────────────────────────────────── */
-.dash .main { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; }
+.dash .main { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .dash .topbar {
   /* 3-column grid: brand (left) · date (center) · theme toggle (right).
      Explicit grid-column placement keeps the date centered even when the
