@@ -112,7 +112,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const connectCalendar = async (): Promise<string | null> => {
     const p = new GoogleAuthProvider();
     p.addScope(CALENDAR_SCOPE);
-    p.setCustomParameters({ include_granted_scopes: "true" });
+    // prompt=consent forces Google to actually show the calendar permission;
+    // without it, an existing login grant is reused and the token comes back
+    // WITHOUT the calendar scope, which makes the Calendar API return 403.
+    p.setCustomParameters({ prompt: "consent", include_granted_scopes: "true" });
     try {
       const result = await signInWithPopup(auth, p);
       const cred = GoogleAuthProvider.credentialFromResult(result);

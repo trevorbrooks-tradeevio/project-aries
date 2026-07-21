@@ -989,6 +989,9 @@
 /* Calendar: Google connect status labels in the legend */
 .dash .cal-gcal-ok { display: inline-flex; align-items: center; gap: 4px; color: var(--success); font-size: 12px; font-weight: 600; }
 .dash .cal-gcal-err { color: var(--accent); font-size: 12px; font-weight: 600; }
+.dash .cal-gcal-banner { border-radius: 12px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
+.dash .cal-gcal-banner.error { background: rgba(192, 57, 43, 0.1); color: var(--accent); border: 1px solid rgba(192, 57, 43, 0.3); }
+.dash .cal-gcal-banner.info { background: var(--panel-hover); color: var(--text-2); border: 1px solid var(--border); }
 
 /* Account: theme segmented control (icon + label) */
 .dash .acct-theme-seg { width: fit-content; }

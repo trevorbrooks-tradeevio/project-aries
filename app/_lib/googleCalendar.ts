@@ -27,8 +27,15 @@ export async function fetchGoogleCalendarEvents(
   const headers = { Authorization: `Bearer ${token}` };
 
   const listRes = await fetch("https://www.googleapis.com/calendar/v3/users/me/calendarList", { headers });
-  if (listRes.status === 401) throw new Error("Google session expired — reconnect to refresh.");
-  if (!listRes.ok) throw new Error(`Couldn't list calendars (${listRes.status}).`);
+  if (!listRes.ok) {
+    let detail = "";
+    try {
+      const j = (await listRes.json()) as { error?: { message?: string } };
+      detail = j.error?.message || "";
+    } catch { /* non-JSON body */ }
+    if (listRes.status === 401) throw new Error("Google session expired — reconnect to refresh.");
+    throw new Error(`Calendar request failed (${listRes.status})${detail ? `: ${detail}` : ""}`);
+  }
   const listData = (await listRes.json()) as GCalListResponse;
   const calendars = (listData.items || []).filter((c) => c.selected !== false);
 

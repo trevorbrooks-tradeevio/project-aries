@@ -144,9 +144,16 @@ export function CalendarView({
                   <Icons.Plus size={13} />{googleStatus === "error" ? "Reconnect Google" : "Connect Google"}
                 </button>
               )}
-              {googleStatus === "error" && googleError && <span className="cal-gcal-err" title={googleError}>Couldn’t connect</span>}
+              {googleStatus === "error" && <span className="cal-gcal-err">Couldn’t connect</span>}
             </div>
           </div>
+
+          {googleStatus === "error" && (
+            <div className="cal-gcal-banner error">{googleError || "Couldn’t connect to Google Calendar."}</div>
+          )}
+          {googleStatus === "connected" && Object.keys(baseEvents).length === 0 && (
+            <div className="cal-gcal-banner info">Connected, but no Google events were found for this period. Make sure you signed in with the account your calendars are shared into.</div>
+          )}
 
           {mode === "agenda" ? (
             <div className="tasklist">
