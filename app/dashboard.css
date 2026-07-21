@@ -25,6 +25,13 @@
   height: 100dvh;
   width: 100%;
 }
+/* iOS Safari / installed PWA only: -webkit-fill-available fills the true
+   standalone viewport (including under the home indicator), which 100dvh does
+   not always do on iPhone. This lets the in-flow bottom nav reach the real
+   bottom edge. Scoped so desktop/Android keep 100dvh. */
+@supports (-webkit-touch-callout: none) {
+  .dash { height: -webkit-fill-available; }
+}
 
 /* ── DARK ── */
 .dash[data-theme="dark"] {
@@ -181,10 +188,9 @@
   display: grid; grid-template-columns: repeat(5, 1fr);
   border-top: 1px solid var(--border); background: var(--sidebar);
   flex-shrink: 0; z-index: 20;
-  /* Fixed to the viewport bottom so it sits flush on iOS regardless of the
-     app-shell height quirks. When the menu opens, .app gets a transform and
-     becomes this element's containing block, so the nav recedes with it. */
-  position: fixed; left: 0; right: 0; bottom: 0;
+  /* In normal flow as the last child of the (now full-height) shell, so it sits
+     at the true bottom. padding fills the home-indicator safe area. */
+  position: relative;
 }
 .dash .bnav-more { position: relative; display: flex; }
 .dash .bnav-more > .bnav-item { width: 100%; }
@@ -1027,28 +1033,13 @@
 
 @media (max-width: 1023px) {
   .dash .topbar { display: none; }
-  /* Clear the status bar at the top, and reserve space at the bottom for the
-     now-fixed bottom nav (its height + the home-indicator safe area). */
-  .dash .content {
-    padding-top: calc(20px + env(safe-area-inset-top));
-    padding-bottom: calc(68px + env(safe-area-inset-bottom));
-  }
+  /* Clear the status bar at the top; the bottom nav is in normal flow now, so
+     it reserves its own space and content doesn't need extra bottom padding. */
+  .dash .content { padding-top: calc(20px + env(safe-area-inset-top)); }
 }
 
-/* Fill the bottom safe area with the nav's own background. The ::after paints
-   the home-indicator strip below the bar: on installed iOS PWAs a fixed
-   bottom:0 bar can leave that safe-area strip showing the page behind it, and
-   padding alone doesn't cover it. top:100% sits it right below the bar; on
-   devices with no inset the height is 0, so it's harmless. */
-.dash .bottom-nav {
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-bottom: max(env(safe-area-inset-bottom), 6px);
-}
-.dash .bottom-nav::after {
-  content: ""; position: absolute; left: 0; right: 0; top: 100%;
-  height: env(safe-area-inset-bottom);
-  background: var(--sidebar);
-}
+/* Extend the nav's background into the home-indicator safe area. */
+.dash .bottom-nav { padding-bottom: max(env(safe-area-inset-bottom), 6px); }
 
 /* ─────────────────────────────────────────────────────────
    MORE DRAWER (phone) — slides in from the right. Settings gear at the
