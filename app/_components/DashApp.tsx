@@ -135,8 +135,12 @@ export function DashApp() {
   // Keep the PWA/browser status-bar color in sync with the chosen theme so the
   // installed app's chrome matches the shell (light shell vs. dark shell).
   useEffect(() => {
+    const shell = theme === "dark" ? "#0a0a0a" : "#f7f3ec";
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", theme === "dark" ? "#0a0a0a" : "#f7f3ec");
+    if (meta) meta.setAttribute("content", shell);
+    // Match the page background behind the app so the iOS safe areas (status
+    // bar + home indicator) never show a mismatched strip.
+    document.body.style.backgroundColor = shell;
   }, [theme]);
 
   // Header scroll-hide/reveal: the header slides up out of view on scroll-down
@@ -175,7 +179,7 @@ export function DashApp() {
   useEffect(() => { setHeaderHidden(false); lastY.current = 0; }, [view]);
 
   return (
-    <div className={"dash" + (sidebarHidden ? " sidebar-hidden" : "")} data-theme={theme}>
+    <div className={"dash" + (sidebarHidden ? " sidebar-hidden" : "") + (moreOpen ? " menu-open" : "")} data-theme={theme}>
       <div className="app" id="appFrame">
         {/* Sidebar (desktop) */}
         <aside className="sidebar">
@@ -290,49 +294,50 @@ export function DashApp() {
               </button>
             </div>
           </nav>
-
-          {/* Slide-in menu drawer (phone). Opens from the right: settings gear
-              at the top, nav list in the middle, profile pinned to the bottom.
-              Always rendered so it can animate; toggled by the `open` class. */}
-          <div className={"more-backdrop" + (moreOpen ? " show" : "")} onClick={() => setMoreOpen(false)} />
-          <aside className={"more-drawer" + (moreOpen ? " open" : "")} role="dialog" aria-modal="true" aria-hidden={!moreOpen}>
-            <div className="md-head">
-              <span className="md-title">Menu</span>
-              <div className="md-head-actions">
-                <button className="md-icon" type="button" aria-label="Settings" onClick={() => { setView("account"); setMoreOpen(false); }}><Icons.Gear size={20} /></button>
-                <button className="md-icon" type="button" aria-label="Close menu" onClick={() => setMoreOpen(false)}>
-                  <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
-                </button>
-              </div>
-            </div>
-            <nav className="md-nav">
-              <button type="button" className={"md-item" + (view === "backlog" ? " active" : "")} onClick={() => { setView("backlog"); setMoreOpen(false); }}><BacklogIcon size={20} />Backlog</button>
-              <button type="button" className={"md-item" + (view === "budget" ? " active" : "")} onClick={() => { setView("budget"); setMoreOpen(false); }}><BudgetIcon size={20} />Budget</button>
-              <button type="button" className={"md-item" + (view === "diet" ? " active" : "")} onClick={() => { setView("diet"); setMoreOpen(false); }}><DietIcon size={20} />Diet</button>
-              <Link href="/roadmap" className="md-item" onClick={() => setMoreOpen(false)}><RoadmapIcon size={20} />Roadmap</Link>
-              <Link href="/releases" className="md-item" onClick={() => setMoreOpen(false)}>
-                <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M12 2 2 7l10 5 10-5-10-5Z" />
-                  <path d="m2 17 10 5 10-5" />
-                  <path d="m2 12 10 5 10-5" />
-                </svg>
-                Releases
-              </Link>
-              <Link href="/style-guide" className="md-item" onClick={() => setMoreOpen(false)}><StyleGuideIcon size={20} />Style Guide</Link>
-            </nav>
-            <button className={"md-profile" + (view === "account" ? " active" : "")} type="button" onClick={() => { setView("account"); setMoreOpen(false); }}>
-              <div className="avatar">
-                {profile.avatar ? <img className="avatar-img" src={profile.avatar} alt="" /> : initialsFrom(profile.name)}
-              </div>
-              <div className="who">
-                <div className="n">{profile.name}</div>
-                {profile.role && <div className="r">{profile.role}</div>}
-              </div>
-              <span className="md-profile-gear"><Icons.Gear size={16} /></span>
-            </button>
-          </aside>
         </div>
       </div>
+
+      {/* Slide-in menu drawer (phone). Lives outside `.app` so the shell can
+          scale back behind it: on open, the app recedes (see .menu-open) and
+          the drawer pulls to the front from the right. Settings gear at the
+          top, nav list in the middle, profile pinned to the bottom. */}
+      <div className={"more-backdrop" + (moreOpen ? " show" : "")} onClick={() => setMoreOpen(false)} />
+      <aside className={"more-drawer" + (moreOpen ? " open" : "")} role="dialog" aria-modal="true" aria-hidden={!moreOpen}>
+        <div className="md-head">
+          <span className="md-title">Menu</span>
+          <div className="md-head-actions">
+            <button className="md-icon" type="button" aria-label="Settings" onClick={() => { setView("account"); setMoreOpen(false); }}><Icons.Gear size={20} /></button>
+            <button className="md-icon" type="button" aria-label="Close menu" onClick={() => setMoreOpen(false)}>
+              <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+          </div>
+        </div>
+        <nav className="md-nav">
+          <button type="button" className={"md-item" + (view === "backlog" ? " active" : "")} onClick={() => { setView("backlog"); setMoreOpen(false); }}><BacklogIcon size={20} />Backlog</button>
+          <button type="button" className={"md-item" + (view === "budget" ? " active" : "")} onClick={() => { setView("budget"); setMoreOpen(false); }}><BudgetIcon size={20} />Budget</button>
+          <button type="button" className={"md-item" + (view === "diet" ? " active" : "")} onClick={() => { setView("diet"); setMoreOpen(false); }}><DietIcon size={20} />Diet</button>
+          <Link href="/roadmap" className="md-item" onClick={() => setMoreOpen(false)}><RoadmapIcon size={20} />Roadmap</Link>
+          <Link href="/releases" className="md-item" onClick={() => setMoreOpen(false)}>
+            <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 2 2 7l10 5 10-5-10-5Z" />
+              <path d="m2 17 10 5 10-5" />
+              <path d="m2 12 10 5 10-5" />
+            </svg>
+            Releases
+          </Link>
+          <Link href="/style-guide" className="md-item" onClick={() => setMoreOpen(false)}><StyleGuideIcon size={20} />Style Guide</Link>
+        </nav>
+        <button className={"md-profile" + (view === "account" ? " active" : "")} type="button" onClick={() => { setView("account"); setMoreOpen(false); }}>
+          <div className="avatar">
+            {profile.avatar ? <img className="avatar-img" src={profile.avatar} alt="" /> : initialsFrom(profile.name)}
+          </div>
+          <div className="who">
+            <div className="n">{profile.name}</div>
+            {profile.role && <div className="r">{profile.role}</div>}
+          </div>
+          <span className="md-profile-gear"><Icons.Gear size={16} /></span>
+        </button>
+      </aside>
     </div>
   );
 }

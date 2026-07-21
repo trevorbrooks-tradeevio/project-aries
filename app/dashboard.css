@@ -1024,12 +1024,30 @@
   box-shadow: -14px 0 40px rgba(0, 0, 0, 0.3);
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
-  transform: translateX(100%);
-  transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Closed: tucked off the right and slightly scaled back (sitting "behind").
+     Open: slides in and scales up to full — pulling to the front. */
+  transform-origin: right center;
+  transform: translateX(100%) scale(0.98);
+  transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.dash .more-drawer.open { transform: translateX(0); }
+.dash .more-drawer.open { transform: translateX(0) scale(1); }
 @media (min-width: 1024px) {
   .dash .more-drawer, .dash .more-backdrop { display: none; }
+}
+
+/* Depth: the whole app shell recedes behind the drawer when the menu opens,
+   revealing the page background around it (phone only). Desktop is untouched. */
+.dash { overflow: hidden; }
+.dash .app {
+  transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1),
+              border-radius 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+@media (max-width: 1023px) {
+  .dash.menu-open .app {
+    transform: scale(0.92) translateX(-3%);
+    border-radius: 22px;
+  }
 }
 
 .dash .md-head {

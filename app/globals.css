@@ -25,7 +25,10 @@ body {
   padding: 0;
   min-height: 100vh;
   min-height: 100dvh;
-  background: #0a0a0a;
+  /* Match the default (light) app shell so the iOS safe areas (status bar +
+     home indicator) don't show black behind the app. DashApp keeps this in
+     sync with the active theme at runtime. */
+  background: #f7f3ec;
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
