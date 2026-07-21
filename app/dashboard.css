@@ -180,7 +180,11 @@
 .dash .bottom-nav {
   display: grid; grid-template-columns: repeat(5, 1fr);
   border-top: 1px solid var(--border); background: var(--sidebar);
-  flex-shrink: 0; position: sticky; bottom: 0; z-index: 20;
+  flex-shrink: 0; z-index: 20;
+  /* Fixed to the viewport bottom so it sits flush on iOS regardless of the
+     app-shell height quirks. When the menu opens, .app gets a transform and
+     becomes this element's containing block, so the nav recedes with it. */
+  position: fixed; left: 0; right: 0; bottom: 0;
 }
 .dash .bnav-more { position: relative; display: flex; }
 .dash .bnav-more > .bnav-item { width: 100%; }
@@ -997,8 +1001,12 @@
 
 @media (max-width: 1023px) {
   .dash .topbar { display: none; }
-  /* Clear the iOS/Android status bar since content now starts at the top. */
-  .dash .content { padding-top: calc(20px + env(safe-area-inset-top)); }
+  /* Clear the status bar at the top, and reserve space at the bottom for the
+     now-fixed bottom nav (its height + the home-indicator safe area). */
+  .dash .content {
+    padding-top: calc(20px + env(safe-area-inset-top));
+    padding-bottom: calc(68px + env(safe-area-inset-bottom));
+  }
 }
 
 /* Fill the bottom safe area with the nav's own background. */
@@ -1041,7 +1049,10 @@
 .dash .app {
   transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1),
               border-radius 0.36s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform;
+  /* No will-change: transform here on purpose — it would make .app a
+     containing block for the fixed bottom-nav even when idle, pulling the nav
+     off the true viewport bottom. .app only becomes a containing block while
+     an actual transform is applied (menu open), which is what we want. */
 }
 @media (max-width: 1023px) {
   .dash.menu-open .app {
