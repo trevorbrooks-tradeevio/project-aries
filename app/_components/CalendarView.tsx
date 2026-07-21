@@ -7,7 +7,7 @@
 
 import { useMemo, useState } from "react";
 import { Icons } from "./Icons";
-import type { CalendarEvents, Task } from "../_lib/types";
+import type { CalendarEvent, CalendarEvents, Task } from "../_lib/types";
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -37,7 +37,73 @@ function fmtHour(h: number) {
   return `${hh} ${ap}`;
 }
 
+// Week time-grid geometry. HOUR_PX must match the CSS (.cw-col background-size
+// and .cw-gutter-h height) so event blocks line up with the hour lines.
+const GRID_START_H = 7; // 7 AM
+const GRID_END_H = 21; // 9 PM (last labelled hour is 8 PM)
+const HOUR_PX = 48;
+const GRID_HEIGHT = (GRID_END_H - GRID_START_H) * HOUR_PX;
+
+const toMin = (t: string) => {
+  const [h, m] = t.split(":");
+  return (Number(h) || 0) * 60 + (Number(m) || 0);
+};
+
 type Cell = { out: boolean; d: number };
+type PlacedEvent = { e: CalendarEvent; top: number; height: number; lane: number; lanes: number };
+
+// Lay timed events out in a day column: size each by its duration, and split
+// events that overlap in time into side-by-side lanes. Missing end -> 30 min.
+function layoutDay(evs: CalendarEvent[]): PlacedEvent[] {
+  const items = evs
+    .filter((e) => e.time)
+    .map((e) => {
+      const s = toMin(e.time);
+      const en = Math.max(e.end ? toMin(e.end) : s + 30, s + 15);
+      return { e, s, en };
+    })
+    .sort((a, b) => a.s - b.s || a.en - b.en);
+
+  const out: PlacedEvent[] = [];
+  let cluster: { e: CalendarEvent; s: number; en: number }[] = [];
+  let clusterEnd = -1;
+
+  const flush = () => {
+    const laneEnds: number[] = [];
+    const laneOf = new Map<{ e: CalendarEvent; s: number; en: number }, number>();
+    for (const it of cluster) {
+      let lane = laneEnds.findIndex((end) => end <= it.s);
+      if (lane === -1) { lane = laneEnds.length; laneEnds.push(it.en); }
+      else laneEnds[lane] = it.en;
+      laneOf.set(it, lane);
+    }
+    const lanes = laneEnds.length || 1;
+    const startFloor = GRID_START_H * 60;
+    const endCeil = GRID_END_H * 60;
+    for (const it of cluster) {
+      const startMin = Math.max(it.s, startFloor);
+      const endMin = Math.min(it.en, endCeil);
+      if (endMin <= startMin) continue; // outside the visible window
+      out.push({
+        e: it.e,
+        top: ((startMin - startFloor) / 60) * HOUR_PX,
+        height: Math.max(16, ((endMin - startMin) / 60) * HOUR_PX),
+        lane: laneOf.get(it) ?? 0,
+        lanes,
+      });
+    }
+    cluster = [];
+    clusterEnd = -1;
+  };
+
+  for (const it of items) {
+    if (cluster.length && it.s >= clusterEnd) flush();
+    cluster.push(it);
+    clusterEnd = Math.max(clusterEnd, it.en);
+  }
+  flush();
+  return out;
+}
 
 type GoogleStatus = "idle" | "loading" | "connected" | "error";
 
@@ -160,7 +226,7 @@ export function CalendarView({
               {dayEvents.length === 0 && <div className="list-empty">Nothing scheduled for this day.</div>}
               {dayEvents.map((e, i) => (
                 <div key={i} className="task-row" style={{ gridTemplateColumns: "auto 1fr auto", cursor: "default" }}>
-                  <div className="t-date-cell" style={{ display: "block", minWidth: 64 }}>{e.time ? fmtTime(e.time) : (e.src === "task" ? "Task" : "All day")}</div>
+                  <div className="t-date-cell" style={{ display: "block", minWidth: 104 }}>{e.time ? (e.end ? `${fmtTime(e.time)}–${fmtTime(e.end)}` : fmtTime(e.time)) : (e.src === "task" ? "Task" : "All day")}</div>
                   <div className="t-title">{e.title}</div>
                   <span className="chip"><span className="dot" style={{ background: e.src === "google" ? "var(--accent)" : e.src === "outlook" ? "#2f6fd0" : "#2ecc71" }} />{e.src === "google" ? "Google" : e.src === "outlook" ? "Work" : "Task"}</span>
                 </div>
@@ -192,19 +258,24 @@ export function CalendarView({
                   );
                 })}
               </div>
-              <div className="cw-scroll">
-                {WEEK_HOURS.map((h) => (
-                  <div key={h} className="cw-row">
-                    <div className="cw-time">{fmtHour(h)}</div>
-                    {weekCells.map((c, i) => {
-                      const evs = evFor(c).filter((e) => e.time && Number(e.time.split(":")[0]) === h);
+              <div className="cw-body" style={{ height: GRID_HEIGHT }}>
+                <div className="cw-gutter">
+                  {WEEK_HOURS.map((h) => (
+                    <div key={h} className="cw-gutter-h" style={{ height: HOUR_PX }}>{fmtHour(h)}</div>
+                  ))}
+                </div>
+                {weekCells.map((c, i) => (
+                  <div key={i} className="cw-col">
+                    {layoutDay(evFor(c)).map((p, j) => {
+                      const w = 100 / p.lanes;
                       return (
-                        <div key={i} className="cw-cell">
-                          {evs.map((e, j) => (
-                            <div key={j} className={"cal-ev " + e.src} title={`${fmtTime(e.time)} ${e.title}`.trim()}>
-                              <span className="cal-ev-time">{fmtTime(e.time)}</span>{e.title}
-                            </div>
-                          ))}
+                        <div
+                          key={j}
+                          className={"cw-ev " + p.e.src}
+                          style={{ top: p.top, height: p.height, left: `calc(${p.lane * w}% + 1px)`, width: `calc(${w}% - 3px)` }}
+                          title={`${fmtTime(p.e.time)}${p.e.end ? "–" + fmtTime(p.e.end) : ""} ${p.e.title}`.trim()}
+                        >
+                          <span className="cal-ev-time">{fmtTime(p.e.time)}</span>{p.e.title}
                         </div>
                       );
                     })}

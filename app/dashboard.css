@@ -719,6 +719,22 @@
   font-family: var(--font-body); font-size: 10px; color: var(--text-3); white-space: nowrap;
 }
 .dash .cw-cell { border-left: 1px solid var(--border); padding: 3px; display: flex; flex-direction: column; gap: 3px; }
+
+/* Week time-grid body: hour gutter + 7 day columns with absolutely-positioned
+   event blocks sized by duration. HOUR_PX (48) is mirrored from CalendarView. */
+.dash .cal-week .cw-body { display: grid; grid-template-columns: 56px repeat(7, minmax(90px, 1fr)); position: relative; }
+.dash .cw-gutter { position: relative; border-right: 1px solid var(--border); }
+.dash .cw-gutter-h { padding: 2px 6px 0; text-align: right; box-sizing: border-box; font-family: var(--font-body); font-size: 10px; color: var(--text-3); white-space: nowrap; }
+.dash .cw-col { position: relative; border-left: 1px solid var(--border); background-image: linear-gradient(var(--border) 1px, transparent 1px); background-size: 100% 48px; }
+.dash .cw-ev {
+  position: absolute; box-sizing: border-box; overflow: hidden; border-radius: 5px;
+  color: #fff; font-family: var(--font-body); font-size: 10px; line-height: 1.25;
+  padding: 2px 5px; border-left: 2px solid rgba(255, 255, 255, 0.5);
+}
+.dash .cw-ev .cal-ev-time { font-weight: 700; margin-right: 4px; }
+.dash .cw-ev.google { background: rgba(192, 57, 43, 0.9); }
+.dash .cw-ev.outlook { background: rgba(47, 111, 208, 0.9); }
+.dash .cw-ev.task { background: rgba(46, 204, 113, 0.9); }
 .dash .cal-more { font-size: 10px; color: var(--text-3); font-family: var(--font-body); padding-left: 2px; }
 .dash .cal-empty { border: 1px dashed var(--border-strong); padding: 40px 24px; text-align: center; margin-bottom: 16px; background: var(--panel); }
 .dash .cal-empty .ce-title { font-family: var(--font-heading, "Barlow Condensed", sans-serif); font-size: 20px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }

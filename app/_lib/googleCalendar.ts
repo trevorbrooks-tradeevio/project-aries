@@ -11,7 +11,12 @@ const isoLocal = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad
 
 type GCalListResponse = { items?: { id: string; selected?: boolean; primary?: boolean }[] };
 type GCalEventsResponse = {
-  items?: { summary?: string; status?: string; start?: { dateTime?: string; date?: string } }[];
+  items?: {
+    summary?: string;
+    status?: string;
+    start?: { dateTime?: string; date?: string };
+    end?: { dateTime?: string; date?: string };
+  }[];
 };
 
 /**
@@ -58,16 +63,21 @@ export async function fetchGoogleCalendarEvents(
       const d = ev.start?.date;
       let date: string;
       let time = "";
+      let end: string | undefined;
       if (dt) {
         const js = new Date(dt);
         date = isoLocal(js);
         time = `${pad(js.getHours())}:${pad(js.getMinutes())}`;
+        if (ev.end?.dateTime) {
+          const je = new Date(ev.end.dateTime);
+          end = `${pad(je.getHours())}:${pad(je.getMinutes())}`;
+        }
       } else if (d) {
         date = d; // all-day: already YYYY-MM-DD
       } else {
         continue;
       }
-      (out[date] ||= []).push({ title: ev.summary || "(no title)", time, src: "google" });
+      (out[date] ||= []).push({ title: ev.summary || "(no title)", time, end, src: "google" });
     }
   }
 

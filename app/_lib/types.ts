@@ -41,7 +41,8 @@ export type CalendarEventSource = "google" | "outlook" | "task";
 
 export type CalendarEvent = {
   title: string;
-  time: string; // "H:MM" 24h
+  time: string; // "H:MM" 24h start; "" for all-day
+  end?: string; // "H:MM" 24h end (optional; used to size week-view blocks)
   src: CalendarEventSource;
 };
 
