@@ -16,16 +16,21 @@ import { ListView } from "./ListView";
 import { NotesView } from "./NotesView";
 import { CalendarView } from "./CalendarView";
 import { GoalsView } from "./GoalsView";
+import { AccountView } from "./AccountView";
 import { SEED_DATA } from "../_lib/data";
 import { useCloudState as useLocalState } from "../_lib/cloudState";
+import { DEFAULT_PROFILE, initialsFrom } from "../_lib/profile";
 import { useAuth } from "../_lib/auth";
-import type { Task, Note, View } from "../_lib/types";
+import type { Task, Note, Profile, View } from "../_lib/types";
 
-function formatTodayLabel(d: Date) {
-  const weekday = d.toLocaleDateString("en-US", { weekday: "short" });
-  const month = d.toLocaleDateString("en-US", { month: "short" });
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${weekday} · ${month} ${day}, ${d.getFullYear()}`;
+function formatTodayLabel(d: Date, timeZone?: string) {
+  // An empty/undefined time zone means "device default" — omit the option so
+  // toLocaleDateString uses the local zone.
+  const tz = timeZone || undefined;
+  const parts = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "2-digit", year: "numeric", timeZone: tz });
+  // Intl gives "Mon, Jul 20, 2026"; reshape to the app's "Mon · Jul 20, 2026".
+  const m = parts.match(/^(\w+), (\w+ \d+), (\d+)$/);
+  return m ? `${m[1]} · ${m[2]}, ${m[3]}` : parts;
 }
 
 const NAV: { id: View; label: string; icon: IconName }[] = [
@@ -41,6 +46,39 @@ function BacklogIcon({ size = 20 }: { size?: number }) {
       <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
       <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z" />
     </svg>
+  );
+}
+
+function BudgetIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="12" y1="1" x2="12" y2="23" />
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+    </svg>
+  );
+}
+
+function DietIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 20a6 6 0 0 0 6-6c0-4-3-8-6-8s-6 4-6 8a6 6 0 0 0 6 6Z" />
+      <path d="M12 6c0-2 1-3.5 3-4" />
+    </svg>
+  );
+}
+
+function Placeholder({ eyebrow, title, blurb }: { eyebrow: string; title: string; blurb: string }) {
+  return (
+    <>
+      <div className="view-head">
+        <span className="eyebrow"><span className="slash">/</span>{eyebrow}</span>
+        <h1 className="view-title">{title}</h1>
+      </div>
+      <div className="placeholder-card">
+        <div className="placeholder-badge">Coming soon</div>
+        <p className="placeholder-blurb">{blurb}</p>
+      </div>
+    </>
   );
 }
 
@@ -88,7 +126,7 @@ export function DashApp() {
   useEffect(() => {
     const applyHash = () => {
       const h = window.location.hash.replace("#", "");
-      if (h === "list" || h === "backlog" || h === "notes" || h === "calendar" || h === "goals") {
+      if (h === "list" || h === "backlog" || h === "notes" || h === "calendar" || h === "goals" || h === "budget" || h === "diet") {
         setView(h);
       }
     };
@@ -98,9 +136,20 @@ export function DashApp() {
   }, []);
   const [tasks, setTasks] = useLocalState<Task[]>("tasks", SEED_DATA.tasks);
   const [notes, setNotes] = useLocalState<Note[]>("notes", SEED_DATA.notes);
+  const [quote, setQuote] = useLocalState("quote", SEED_DATA.quote);
+  const [reminders, setReminders] = useLocalState<string[]>("reminders", SEED_DATA.reminders);
+  const [profile, setProfile] = useLocalState<Profile>("profile", DEFAULT_PROFILE);
+  const [timezone, setTimezone] = useLocalState<string>("timezone", "");
 
   const [todayLabel, setTodayLabel] = useState("");
-  useEffect(() => { setTodayLabel(formatTodayLabel(new Date())); }, []);
+  useEffect(() => { setTodayLabel(formatTodayLabel(new Date(), timezone)); }, [timezone]);
+
+  // Keep the PWA/browser status-bar color in sync with the chosen theme so the
+  // installed app's chrome matches the shell (light shell vs. dark shell).
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", theme === "dark" ? "#0a0a0a" : "#f7f3ec");
+  }, [theme]);
 
   // Header scroll-hide/reveal: the header slides up out of view on scroll-down
   // and eases back in on scroll-up. Content scrolls inside `.content` (the app
@@ -157,6 +206,12 @@ export function DashApp() {
             <button type="button" className={"nav-item" + (view === "backlog" ? " active" : "")} onClick={() => setView("backlog")}>
               <BacklogIcon size={20} />Backlog
             </button>
+            <button type="button" className={"nav-item" + (view === "budget" ? " active" : "")} onClick={() => setView("budget")}>
+              <BudgetIcon size={20} />Budget
+            </button>
+            <button type="button" className={"nav-item" + (view === "diet" ? " active" : "")} onClick={() => setView("diet")}>
+              <DietIcon size={20} />Diet
+            </button>
             <Link href="/roadmap" className="nav-item">
               <RoadmapIcon size={20} />Roadmap
             </Link>
@@ -174,12 +229,21 @@ export function DashApp() {
             </Link>
           </nav>
           <div className="sidebar-foot">
-            <div className="avatar">{SEED_DATA.user.initials}</div>
-            <div className="who">
-              <div className="n">{SEED_DATA.user.name}</div>
-              <div className="r">{SEED_DATA.user.role}</div>
-            </div>
-            <button className="icon-btn" aria-label="Settings" type="button"><Icons.Gear size={18} /></button>
+            <button
+              type="button"
+              className={"sidebar-acct" + (view === "account" ? " active" : "")}
+              onClick={() => setView("account")}
+              aria-label="Open account settings"
+            >
+              <div className="avatar">
+                {profile.avatar ? <img className="avatar-img" src={profile.avatar} alt="" /> : initialsFrom(profile.name)}
+              </div>
+              <div className="who">
+                <div className="n">{profile.name}</div>
+                {profile.role && <div className="r">{profile.role}</div>}
+              </div>
+            </button>
+            <button className={"icon-btn" + (view === "account" ? " active" : "")} aria-label="Account settings" type="button" onClick={() => setView("account")}><Icons.Gear size={18} /></button>
           </div>
         </aside>
 
@@ -216,11 +280,14 @@ export function DashApp() {
           </div>
 
           <div className="content" ref={contentRef}>
-            {view === "list" && <ListView tasks={tasks} setTasks={setTasks} quote={SEED_DATA.quote} reminders={SEED_DATA.reminders} />}
+            {view === "list" && <ListView tasks={tasks} setTasks={setTasks} quote={quote} reminders={reminders} />}
             {view === "backlog" && <ListView tasks={tasks} setTasks={setTasks} mode="backlog" />}
             {view === "notes" && <NotesView notes={notes} setNotes={setNotes} />}
             {view === "calendar" && <CalendarView events={SEED_DATA.events} tasks={tasks} />}
             {view === "goals" && <GoalsView />}
+            {view === "budget" && <Placeholder eyebrow="Money" title="Budget" blurb="Track income, expenses, and savings here. This section is a placeholder for now." />}
+            {view === "diet" && <Placeholder eyebrow="Health" title="Diet" blurb="Log meals, macros, and habits here. This section is a placeholder for now." />}
+            {view === "account" && <AccountView profile={profile} setProfile={setProfile} quote={quote} setQuote={setQuote} reminders={reminders} setReminders={setReminders} timezone={timezone} setTimezone={setTimezone} />}
           </div>
 
           {/* Bottom nav (phone) */}
@@ -259,6 +326,22 @@ export function DashApp() {
                       onClick={() => { setView("backlog"); setMoreOpen(false); }}
                     >
                       <BacklogIcon size={18} />Backlog
+                    </button>
+                    <button
+                      type="button"
+                      className={"bnav-more-item" + (view === "budget" ? " active" : "")}
+                      role="menuitem"
+                      onClick={() => { setView("budget"); setMoreOpen(false); }}
+                    >
+                      <BudgetIcon size={18} />Budget
+                    </button>
+                    <button
+                      type="button"
+                      className={"bnav-more-item" + (view === "diet" ? " active" : "")}
+                      role="menuitem"
+                      onClick={() => { setView("diet"); setMoreOpen(false); }}
+                    >
+                      <DietIcon size={18} />Diet
                     </button>
                     <Link href="/roadmap" className="bnav-more-item" role="menuitem" onClick={() => setMoreOpen(false)}>
                       <RoadmapIcon size={18} />Roadmap

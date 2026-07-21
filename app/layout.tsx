@@ -27,7 +27,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0a",
+  // Default to the light shell; DashApp keeps this <meta> in sync with the
+  // user's in-app theme toggle so the mobile status bar always matches.
+  themeColor: "#f7f3ec",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

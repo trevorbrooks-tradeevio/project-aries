@@ -63,6 +63,12 @@ export type DashData = {
   events: CalendarEvents;
 };
 
-export type View = "list" | "backlog" | "notes" | "calendar" | "goals";
+export type Quote = { text: string; author: string };
+
+/** Editable profile shown on the account block. `avatar` is a small data-URL
+    (resized on upload) or null to fall back to initials. */
+export type Profile = { name: string; role: string; avatar: string | null };
+
+export type View = "list" | "backlog" | "notes" | "calendar" | "goals" | "budget" | "diet" | "account";
 
 export type FocusTarget = { type: "task" | "note" | "goal"; id: string } | null;

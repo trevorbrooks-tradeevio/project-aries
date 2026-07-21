@@ -116,11 +116,19 @@
     background: var(--sidebar);
     border-right: 1px solid var(--border);
     padding: 22px 0;
+    /* Ease the menu open/closed instead of snapping it with display:none.
+       Width + opacity animate; overflow clips the nav labels as it narrows,
+       and nowrap keeps them on one line while collapsing. */
+    overflow: hidden; white-space: nowrap;
+    transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  /* Collapsed state (desktop): width animates to 0 and the panel fades out.
+     The main content reflows smoothly to fill the space. */
+  .dash.sidebar-hidden .sidebar {
+    width: 0; opacity: 0; border-right-width: 0; pointer-events: none;
   }
 }
-/* Hide the desktop sidebar when collapsed (higher specificity than the
-   media rule above, so it wins on desktop too). */
-.dash.sidebar-hidden .sidebar { display: none; }
 /* Sidebar show/hide toggle — lives in the top bar's left cell, desktop only
    (phone uses the bottom nav, so there's no sidebar to toggle there). */
 .dash .topbar .sidebar-toggle {
@@ -623,7 +631,7 @@
 }
 .dash .note-editor textarea.ne-body {
   flex: 1; background: transparent; border: none; outline: none; resize: none;
-  color: var(--text-2); font-family: var(--font-body); font-size: 15px; font-weight: 300; line-height: 1.7;
+  color: var(--text); font-family: var(--font-body); font-size: 15px; font-weight: 300; line-height: 1.7;
   padding: 18px;
 }
 .dash .autosave { font-size: 11px; color: var(--text-3); font-family: var(--font-body); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
@@ -854,3 +862,119 @@
   /* Full-width sheet on phone — square edges read better edge-to-edge. */
   .dash .panel { border-radius: 0; }
 }
+
+/* ─────────────────────────────────────────────────────────
+   ENTRANCE CASCADE (July 2026).
+   Each top-level block in the content area (header, reminders,
+   quote banner, filter bar, quick-add, task list — and the
+   equivalent blocks in the other views) eases in on mount and
+   staggers top-to-bottom. Because view children are direct
+   children of .content, switching views replays the cascade for
+   the new view. Nudge the step/duration below to taste.
+───────────────────────────────────────────────────────── */
+@keyframes dashCascadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dash .content > * {
+  animation: dashCascadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* Top-to-bottom stagger. Covers the first ~10 blocks; anything
+   beyond settles at the last delay rather than waiting longer. */
+.dash .content > *:nth-child(1)  { animation-delay: 0.04s; }
+.dash .content > *:nth-child(2)  { animation-delay: 0.10s; }
+.dash .content > *:nth-child(3)  { animation-delay: 0.16s; }
+.dash .content > *:nth-child(4)  { animation-delay: 0.22s; }
+.dash .content > *:nth-child(5)  { animation-delay: 0.28s; }
+.dash .content > *:nth-child(6)  { animation-delay: 0.34s; }
+.dash .content > *:nth-child(7)  { animation-delay: 0.40s; }
+.dash .content > *:nth-child(8)  { animation-delay: 0.46s; }
+.dash .content > *:nth-child(9)  { animation-delay: 0.52s; }
+.dash .content > *:nth-child(n+10) { animation-delay: 0.58s; }
+
+/* Respect users who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .dash .content > * { animation: none; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   ACCOUNT VIEW (July 2026).
+   Editable Daily Reminders + Quote of the Time. Reuses .field,
+   .inp, .btn, .eyebrow; the pieces below are layout-only.
+───────────────────────────────────────────────────────── */
+/* Clickable account block in the sidebar footer — resets button chrome
+   and fills the row so the whole area reads as one target. */
+.dash .sidebar-acct {
+  display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
+  background: transparent; border: none; cursor: pointer; text-align: left;
+  padding: 6px 8px; margin: -6px -8px; border-radius: 12px;
+  transition: background 0.2s ease;
+}
+.dash .sidebar-acct:hover,
+.dash .sidebar-acct.active { background: var(--sidebar-active-bg, var(--panel-hover)); }
+.dash .icon-btn.active { color: var(--sidebar-active-fg, #fff); }
+
+.dash .acct-card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 16px; padding: 18px; margin-bottom: 18px;
+}
+.dash .acct-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 14px;
+}
+.dash .acct-card-head .eyebrow { margin-bottom: 0; }
+.dash .acct-empty { color: var(--text-3); font-size: 13px; padding: 6px 0 10px; }
+.dash .acct-rem-list { display: flex; flex-direction: column; gap: 10px; }
+.dash .acct-rem-row { display: flex; align-items: center; gap: 8px; }
+.dash .acct-rem-row .inp { flex: 1; }
+.dash .acct-rem-move { display: flex; flex-direction: column; gap: 2px; }
+.dash .acct-rem-move button {
+  background: transparent; border: 1px solid var(--border); color: var(--text-2);
+  cursor: pointer; width: 24px; height: 18px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center; padding: 0;
+}
+.dash .acct-rem-move button:hover:not(:disabled) { color: var(--text); border-color: var(--accent); }
+.dash .acct-rem-move button:disabled { opacity: 0.35; cursor: default; }
+.dash .acct-optional { color: var(--text-3); font-weight: 400; text-transform: none; letter-spacing: 0; }
+.dash .acct-note { color: var(--text-3); font-size: 12px; margin: 4px 2px 0; }
+
+/* Save bar in the account header */
+.dash .acct-save-bar { display: flex; align-items: center; gap: 10px; }
+.dash .acct-saved {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--success); font-size: 12px; font-weight: 600;
+}
+
+/* Two-column field grid (name / role) — collapses on narrow screens */
+.dash .acct-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 640px) { .dash .acct-grid { grid-template-columns: 1fr; } }
+
+/* Profile avatar editor */
+.dash .acct-profile { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+.dash .acct-avatar {
+  width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+  background: linear-gradient(135deg, var(--accent), var(--burgundy));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-heading, "Barlow Condensed", sans-serif);
+  font-weight: 700; color: #fff; font-size: 24px;
+}
+.dash .acct-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.dash .acct-avatar-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Uploaded image inside the small sidebar-footer avatar */
+.dash .avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+/* Placeholder views (Budget, Diet) — "coming soon" cards */
+.dash .placeholder-card {
+  background: var(--panel); border: 1px dashed var(--border);
+  border-radius: 16px; padding: 40px 24px; text-align: center;
+}
+.dash .placeholder-badge {
+  display: inline-block; padding: 5px 12px; border-radius: 999px;
+  background: var(--panel-hover); color: var(--text-2);
+  font-family: var(--font-heading, "Barlow Condensed", sans-serif);
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
+.dash .placeholder-blurb { color: var(--text-3); font-size: 14px; max-width: 420px; margin: 0 auto; }

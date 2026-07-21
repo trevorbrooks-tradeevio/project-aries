@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import withSerwistInit from "@serwist/next";
 
 const config: NextConfig = {
   reactStrictMode: true,
@@ -8,4 +9,14 @@ const config: NextConfig = {
   },
 };
 
-export default config;
+// Serwist generates public/sw.js (Workbox precache + runtime caching) from
+// app/sw.ts at build time. Disabled in dev so it doesn't fight hot reload —
+// which is also why PWARegister only registers the SW in production.
+const withSerwist = withSerwistInit({
+  swSrc: "app/sw.ts",
+  swDest: "public/sw.js",
+  disable: process.env.NODE_ENV === "development",
+  reloadOnOnline: true,
+});
+
+export default withSerwist(config);
