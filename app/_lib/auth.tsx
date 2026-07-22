@@ -37,6 +37,9 @@ const Ctx = createContext<AuthCtx>({
 const provider = new GoogleAuthProvider();
 
 const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.readonly";
+// Read-only access to Google Sheets, granted alongside Calendar so a single
+// "Connect Google" flow yields one token that authorizes both APIs.
+const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
 // Marks that the pending redirect was a calendar-connect (not a plain sign-in),
 // so getRedirectResult knows to keep the returned access token.
 const GCAL_REDIRECT_FLAG = "aries:gcal_redirect";
@@ -112,6 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const connectCalendar = async (): Promise<string | null> => {
     const p = new GoogleAuthProvider();
     p.addScope(CALENDAR_SCOPE);
+    p.addScope(SHEETS_SCOPE);
     // prompt=consent forces Google to actually show the calendar permission;
     // without it, an existing login grant is reused and the token comes back
     // WITHOUT the calendar scope, which makes the Calendar API return 403.

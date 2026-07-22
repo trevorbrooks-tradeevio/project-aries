@@ -658,6 +658,36 @@
 .dash .pin-btn.on { border-color: var(--accent); color: var(--accent); background: rgba(192,57,43,0.1); }
 .dash .pin-btn svg { width: 14px; height: 14px; }
 
+/* Notes gallery (Mac Notes-style card grid) — alternate to the two-pane list */
+.dash .notes-gallery-wrap { display: flex; flex-direction: column; gap: 4px; min-height: 0; }
+.dash .notes-gallery-wrap .note-search { margin-bottom: 8px; }
+.dash .notes-gallery { flex: 1; overflow-y: auto; display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); align-content: start; padding: 2px; }
+.dash .note-card {
+  display: flex; flex-direction: column; gap: 8px; text-align: left; cursor: pointer;
+  background: transparent; border: none; padding: 0; min-width: 0;
+}
+.dash .note-card .nc-page {
+  position: relative; background: var(--panel); border: 1px solid var(--border);
+  height: 170px; padding: 14px 14px 12px; overflow: hidden; transition: border-color 0.12s ease, transform 0.12s ease;
+}
+.dash .note-card:hover .nc-page { border-color: var(--accent); transform: translateY(-2px); }
+.dash .note-card.pinned .nc-page { border-left: 3px solid var(--accent); }
+.dash .note-card .nc-title {
+  font-family: var(--font-heading, "Barlow Condensed", sans-serif); font-size: 16px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.02em; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 18px;
+}
+.dash .note-card .nc-body {
+  font-family: var(--font-body); font-size: 12px; font-weight: 300; line-height: 1.55; color: var(--text-3);
+  margin-top: 8px; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;
+}
+.dash .note-card .nc-pin { position: absolute; top: 12px; right: 12px; color: var(--accent); display: flex; }
+.dash .note-card .nc-meta {
+  font-family: var(--font-body); font-size: 10px; font-weight: 300; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.06em; padding-left: 2px;
+}
+.dash .note-card mark { background: rgba(192,57,43,0.24); color: inherit; padding: 0 1px; }
+
 /* ─────────────────────────────────────────────────────────
    CALENDAR
 ───────────────────────────────────────────────────────── */
@@ -865,7 +895,7 @@
 /* Cards + rows */
 .dash .task-row, .dash .reminder, .dash .filterbar, .dash .quick-add,
 .dash .note-item, .dash .note-search, .dash .quote-row, .dash .cal-empty,
-.dash .search { border-radius: 12px; }
+.dash .note-card .nc-page, .dash .search { border-radius: 12px; }
 .dash .task-row::before, .dash .reminder::before { top: 10px; bottom: 10px; border-radius: 99px; }
 .dash .quote-banner { border-radius: 16px; }
 .dash .quote-banner::before { top: 16px; bottom: 16px; border-radius: 99px; }
@@ -1149,3 +1179,33 @@
 .dash .md-profile .who .n { font-size: 14px; font-weight: 600; color: var(--sidebar-fg, #fff); }
 .dash .md-profile .who .r { font-size: 11px; color: var(--sidebar-item); }
 .dash .md-profile .md-profile-gear { color: var(--sidebar-item); display: flex; flex-shrink: 0; }
+
+/* ---- Budget view (Google Sheet-backed) ---------------------------------- */
+.dash .budget-source {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px;
+}
+.dash .budget-input {
+  flex: 1 1 320px; min-width: 200px; padding: 9px 12px;
+  background: var(--panel); color: var(--text);
+  border: 1px solid var(--border-strong); border-radius: 0;
+  font-size: 13px; font-family: inherit;
+}
+.dash .budget-input:focus { outline: none; border-color: var(--accent); }
+.dash .budget-input.budget-tab { flex: 0 1 160px; min-width: 120px; }
+.dash .budget-banner.error {
+  padding: 10px 14px; margin-bottom: 14px; font-size: 13px;
+  color: var(--accent); border: 1px solid var(--accent); background: var(--panel-hover);
+}
+.dash .budget-table-wrap { overflow-x: auto; border: 1px solid var(--border); }
+.dash .budget-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dash .budget-table th {
+  text-align: left; padding: 10px 14px; background: var(--panel-2);
+  border-bottom: 1px solid var(--border-strong); color: var(--text-2);
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px;
+  white-space: nowrap;
+}
+.dash .budget-table td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--text); }
+.dash .budget-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dash .budget-table tbody tr:hover { background: var(--panel-hover); }
+.dash .budget-table tfoot td { border-top: 2px solid var(--border-strong); font-weight: 700; }
+.dash .budget-table tfoot td.total { color: var(--accent); }

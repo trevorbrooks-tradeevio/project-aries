@@ -5,7 +5,7 @@ import type { SVGProps } from "react";
 export type IconName =
   | "List" | "Notes" | "Calendar" | "Quote" | "Goal" | "Search" | "Gear" | "Plus"
   | "Drag" | "ChevL" | "ChevR" | "Check" | "Sun" | "Moon" | "Edit" | "Trash"
-  | "Pin" | "Archive" | "X" | "ChevD";
+  | "Pin" | "Archive" | "X" | "ChevD" | "Grid";
 
 export type IconProps = { size?: number; style?: SVGProps<SVGSVGElement>["style"]; className?: string };
 type IconComponent = (props: IconProps) => React.ReactElement;
@@ -37,6 +37,12 @@ export const Icons: Record<IconName, IconComponent> = {
     <>
       <path d="M8 6h13" /><path d="M8 12h13" /><path d="M8 18h13" />
       <path d="M3 6h.01" /><path d="M3 12h.01" /><path d="M3 18h.01" />
+    </>
+  ),
+  Grid: ico(
+    <>
+      <rect x={4} y={4} width={7} height={7} /><rect x={13} y={4} width={7} height={7} />
+      <rect x={4} y={13} width={7} height={7} /><rect x={13} y={13} width={7} height={7} />
     </>
   ),
   Notes: ico(

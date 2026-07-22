@@ -16,6 +16,7 @@ import { ListView } from "./ListView";
 import { NotesView } from "./NotesView";
 import { CalendarView } from "./CalendarView";
 import { GoalsView } from "./GoalsView";
+import { BudgetView } from "./BudgetView";
 import { AccountView } from "./AccountView";
 import { SEED_DATA } from "../_lib/data";
 import { useCloudState as useLocalState } from "../_lib/cloudState";
@@ -132,6 +133,8 @@ export function DashApp() {
   const [reminders, setReminders] = useLocalState<string[]>("reminders", SEED_DATA.reminders);
   const [profile, setProfile] = useLocalState<Profile>("profile", DEFAULT_PROFILE);
   const [timezone, setTimezone] = useLocalState<string>("timezone", "");
+  const [budgetSheetUrl, setBudgetSheetUrl] = useLocalState<string>("budgetSheetUrl", "");
+  const [budgetTab, setBudgetTab] = useLocalState<string>("budgetTab", "July 2026");
 
   // Google Calendar (read-only, in-memory for the session — never persisted).
   const [googleEvents, setGoogleEvents] = useState<CalendarEvents>({});
@@ -314,7 +317,7 @@ export function DashApp() {
             {view === "notes" && <NotesView notes={notes} setNotes={setNotes} />}
             {view === "calendar" && <CalendarView events={googleEvents} tasks={tasks} onConnectGoogle={connectGoogle} onRefreshGoogle={refreshGoogle} googleStatus={gcalStatus} googleError={gcalError} />}
             {view === "goals" && <GoalsView />}
-            {view === "budget" && <Placeholder eyebrow="Money" title="Budget" blurb="Track income, expenses, and savings here. This section is a placeholder for now." />}
+            {view === "budget" && <BudgetView token={calendarToken} onConnectGoogle={connectGoogle} sheetUrl={budgetSheetUrl} setSheetUrl={setBudgetSheetUrl} tabName={budgetTab} setTabName={setBudgetTab} />}
             {view === "diet" && <Placeholder eyebrow="Health" title="Diet" blurb="Log meals, macros, and habits here. This section is a placeholder for now." />}
             {view === "account" && <AccountView profile={profile} setProfile={setProfile} quote={quote} setQuote={setQuote} reminders={reminders} setReminders={setReminders} timezone={timezone} setTimezone={setTimezone} theme={theme} setTheme={setTheme} onSignOut={() => void signOut()} />}
           </div>

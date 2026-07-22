@@ -47,10 +47,11 @@ export function NotesView({ notes, setNotes, focusId, onFocusConsumed }: NotesVi
   const [activeId, setActiveId] = useState<string | null>(notes[0]?.id ?? null);
   const [savedAt, setSavedAt] = useState("Saved");
   const [q, setQ] = useState("");
+  const [view, setView] = useState<"list" | "grid">("list");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
-    if (focusId) { setActiveId(focusId); setQ(""); onFocusConsumed?.(); }
+    if (focusId) { setActiveId(focusId); setQ(""); setView("list"); onFocusConsumed?.(); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusId]);
 
@@ -90,9 +91,45 @@ export function NotesView({ notes, setNotes, focusId, onFocusConsumed }: NotesVi
           <span className="eyebrow"><span className="slash">/</span>Workspace</span>
           <h1 className="view-title">Notes</h1>
         </div>
-        <button className="btn btn-red" onClick={addNote} type="button"><Icons.Plus size={15} />New Note</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="seg" style={{ borderColor: "var(--border-strong)" }}>
+            <button type="button" className={view === "list" ? "on" : ""} style={view !== "list" ? { color: "var(--text-3)" } : undefined} onClick={() => setView("list")} aria-label="List view"><Icons.List size={14} /></button>
+            <button type="button" className={view === "grid" ? "on" : ""} style={view !== "grid" ? { color: "var(--text-3)" } : undefined} onClick={() => setView("grid")} aria-label="Grid view"><Icons.Grid size={14} /></button>
+          </div>
+          <button className="btn btn-red" onClick={addNote} type="button"><Icons.Plus size={15} />New Note</button>
+        </div>
       </div>
 
+      {view === "grid" ? (
+        <div className="notes-gallery-wrap" style={{ height: "calc(100% - 78px)" }}>
+          <div className="note-search">
+            <Icons.Search size={14} />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search notes…" />
+            {q && <button className="close-x" style={{ fontSize: 16, padding: 0 }} onClick={() => setQ("")} aria-label="Clear" type="button">×</button>}
+          </div>
+          {ordered.length === 0 ? (
+            <div className="notes-empty">{q ? <>No notes match &ldquo;{q}&rdquo;.</> : "No notes yet. Create one to get started."}</div>
+          ) : (
+            <div className="notes-gallery">
+              {ordered.map((n) => (
+                <button
+                  key={n.id}
+                  className={"note-card" + (n.pinned ? " pinned" : "")}
+                  onClick={() => { setActiveId(n.id); setView("list"); }}
+                  type="button"
+                >
+                  <div className="nc-page">
+                    <div className="nc-title">{highlight(n.title || "Untitled", q)}</div>
+                    <div className="nc-body">{n.body ? n.body.replace(/\n/g, " ") : "No content yet"}</div>
+                    {n.pinned && <span className="nc-pin"><Icons.Pin size={13} /></span>}
+                  </div>
+                  <div className="nc-meta">Edited {relTime(n.updated)}</div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
       <div className="notes-wrap" style={{ height: "calc(100% - 78px)" }}>
         <div className="notes-list">
           <div className="note-search">
@@ -138,6 +175,7 @@ export function NotesView({ notes, setNotes, focusId, onFocusConsumed }: NotesVi
           )}
         </div>
       </div>
+      )}
     </>
   );
 }
