@@ -1045,6 +1045,20 @@
 /* Extend the nav's background into the home-indicator safe area. */
 .dash .bottom-nav { padding-bottom: max(env(safe-area-inset-bottom), 6px); }
 
+/* FIX #1 TEST (July 2026): the JS-pinned shell height (--app-h from
+   visualViewport.height) can land a few px short of the physical screen on iOS
+   standalone, leaving the body's app-bg color showing below the nav. Paint the
+   true bottom strip in the nav color with a viewport-fixed filler so any residual
+   gap reads as the nav rather than a cream/black chin. Sits just under the nav
+   (z 19 vs nav's 20). Remove if we move to fix #2 (nav out of .app). */
+@media (max-width: 1023px) {
+  .dash::after {
+    content: ""; position: fixed; left: 0; right: 0; bottom: 0;
+    height: max(env(safe-area-inset-bottom), 6px);
+    background: var(--sidebar); z-index: 19; pointer-events: none;
+  }
+}
+
 /* ─────────────────────────────────────────────────────────
    MORE DRAWER (phone) — slides in from the right. Settings gear at the
    top, scrollable nav list in the middle, profile pinned to the bottom.
