@@ -319,35 +319,39 @@ export function DashApp() {
             {view === "account" && <AccountView profile={profile} setProfile={setProfile} quote={quote} setQuote={setQuote} reminders={reminders} setReminders={setReminders} timezone={timezone} setTimezone={setTimezone} theme={theme} setTheme={setTheme} onSignOut={() => void signOut()} />}
           </div>
 
-          {/* Bottom nav (phone) */}
-          <nav className="bottom-nav">
-            {NAV.map((n) => {
-              const C = Icons[n.icon];
-              return (
-                <button key={n.id} type="button" className={"bnav-item" + (view === n.id ? " active" : "")} onClick={() => setView(n.id)}>
-                  <C size={22} />{n.label}
-                </button>
-              );
-            })}
-            <div className="bnav-more">
-              <button
-                type="button"
-                className={"bnav-item" + (moreOpen ? " active" : "")}
-                aria-expanded={moreOpen}
-                aria-label="More"
-                onClick={() => setMoreOpen((o) => !o)}
-              >
-                <svg width={22} height={22} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <circle cx="5" cy="12" r="2" />
-                  <circle cx="12" cy="12" r="2" />
-                  <circle cx="19" cy="12" r="2" />
-                </svg>
-                More
-              </button>
-            </div>
-          </nav>
         </div>
       </div>
+
+      {/* Bottom nav (phone). Rendered as a direct child of .dash — OUTSIDE
+          `.app` — so position:fixed (see dashboard.css) pins it to the true
+          viewport bottom on iOS standalone, and the menu-open transform on
+          `.app` never drags it off the bottom edge. */}
+      <nav className="bottom-nav">
+        {NAV.map((n) => {
+          const C = Icons[n.icon];
+          return (
+            <button key={n.id} type="button" className={"bnav-item" + (view === n.id ? " active" : "")} onClick={() => setView(n.id)}>
+              <C size={22} />{n.label}
+            </button>
+          );
+        })}
+        <div className="bnav-more">
+          <button
+            type="button"
+            className={"bnav-item" + (moreOpen ? " active" : "")}
+            aria-expanded={moreOpen}
+            aria-label="More"
+            onClick={() => setMoreOpen((o) => !o)}
+          >
+            <svg width={22} height={22} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <circle cx="5" cy="12" r="2" />
+              <circle cx="12" cy="12" r="2" />
+              <circle cx="19" cy="12" r="2" />
+            </svg>
+            More
+          </button>
+        </div>
+      </nav>
 
       {/* Slide-in menu drawer (phone). Lives outside `.app` so the shell can
           scale back behind it: on open, the app recedes (see .menu-open) and

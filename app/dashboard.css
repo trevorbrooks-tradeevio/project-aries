@@ -1045,17 +1045,21 @@
 /* Extend the nav's background into the home-indicator safe area. */
 .dash .bottom-nav { padding-bottom: max(env(safe-area-inset-bottom), 6px); }
 
-/* FIX #1 TEST (July 2026): the JS-pinned shell height (--app-h from
-   visualViewport.height) can land a few px short of the physical screen on iOS
-   standalone, leaving the body's app-bg color showing below the nav. Paint the
-   true bottom strip in the nav color with a viewport-fixed filler so any residual
-   gap reads as the nav rather than a cream/black chin. Sits just under the nav
-   (z 19 vs nav's 20). Remove if we move to fix #2 (nav out of .app). */
+/* FIX (July 2026): on iPhone the JS-pinned shell height (--app-h from
+   visualViewport.height) lands shorter than the physical screen, so a bottom
+   nav in normal flow floats up and leaves an app-colored band beneath it that
+   reads as a gap. Desktop can't reproduce it (no home indicator; visualViewport
+   == window). Fix: pin the nav to the true viewport bottom. It's rendered as a
+   direct child of .dash (OUTSIDE .app), so the menu-open transform on .app never
+   captures it, and .dash has no transform at rest, so `fixed` resolves to the
+   viewport rather than the shell box. Content reserves the nav's height so the
+   last rows don't hide behind it. */
 @media (max-width: 1023px) {
-  .dash::after {
-    content: ""; position: fixed; left: 0; right: 0; bottom: 0;
-    height: max(env(safe-area-inset-bottom), 6px);
-    background: var(--sidebar); z-index: 19; pointer-events: none;
+  .dash .bottom-nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  }
+  .dash .content {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
   }
 }
 
